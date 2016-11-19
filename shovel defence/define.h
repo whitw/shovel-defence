@@ -23,7 +23,7 @@ typedef enum unitT {
 	uKid, uArchery, uCannon, uLaser,uWarrior,uSniper,uFarm,uTank
 }unitT;
 typedef enum enemyT {
-	eEmpty,eChicken,eThief,eRunner,ePirates,eBomb,eShield,eAirship,eTank,eKnight,eKing
+	eEmpty,eChicken,eThief,eRunner,ePirates,eBomb,eShield,eAirship,eTank,eKnight,eKing,eEnd = -1
 }enemyT;
 typedef struct pos
 {

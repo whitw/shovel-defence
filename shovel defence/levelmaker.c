@@ -405,10 +405,10 @@ void waveEdit(FILE* fp)
 	while (1)
 	{
 		setColor(gray);//아래쪽 테이프
-	gotoxy(2 * MAX_LR + 10, 37); printf("▼시작 위치: %d", indexTime);
+	gotoxy(2 * MAX_LR + 40, 37); printf("▼이곳 위치: %3d", indexTime);
 		gotoxy(2 * MAX_LR + 10, 38);
-		for (int i = 0; i < 20; i++)
-			printf("%02d ", enemyarr[index][(indexTime + i) % 1000]);
+		for (int i = -10; i < 10; i++)
+			printf("%02d ", enemyarr[index][(indexTime +1000 + i) % 1000]);
 		gotoxy(start.x + 2 * enemystart[index].x, start.y + enemystart[index].y); setColor(bloody); printf("■");
 		ch = _getch();
 		gotoxy(start.x + 2 * enemystart[index].x, start.y + enemystart[index].y); setColor(sky); printf("■");
@@ -447,6 +447,8 @@ void waveEdit(FILE* fp)
 			}
 			if(ch == 'q' || ch == 'Q')
 				enemyarr[index][indexTime] = eEmpty;
+			if (ch == 'w' || ch == 'W')
+				enemyarr[index][indexTime] = eEnd;
 			if (ch == 'a' || ch == 'A')
 				enemyarr[index][indexTime] = eChicken;
 			if (ch == 's' || ch == 'S')
