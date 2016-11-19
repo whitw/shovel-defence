@@ -1,7 +1,7 @@
 #include "define.h"
 #pragma warning(disable:4996)
 
-pos enemy[5]; //레이드가 시작되는 지점, 최대 4개
+pos enemystart[5]; //레이드가 시작되는 지점, 최대 4개
 
 void levelmaker()
 {
@@ -128,8 +128,8 @@ void mapEdit(FILE* fp) //현재 wt로 열려있음. 닫을 필요는 없다.
 	printf("☜");
 	for (int i = 0; i < 5; i++)
 	{
-		enemy[i].x = -1;
-		enemy[i].y = -1;
+		enemystart[i].x = -1;
+		enemystart[i].y = -1;
 	}
 
 	while (1) //지우기-> 포인터 옮기기-> 그리기를 반복.
@@ -322,7 +322,7 @@ void mapEdit(FILE* fp) //현재 wt로 열려있음. 닫을 필요는 없다.
 		printf("☜");
 	}
 BREAK_GET_KEY:
-	enemyExist == 0;
+	enemyExist = 0;
 	for (int i = 0;i < MAX_LR; i++)
 	{
 		for (int j = 0; j < MAX_UD; j++)
@@ -330,62 +330,154 @@ BREAK_GET_KEY:
 			fprintf(fp, "%d ", map[j][i]);
 			if (map[j][i] == ENEMYPOS)
 			{
-				enemy[enemyExist].x = j;
-				enemy[enemyExist].y = i;
+				enemystart[enemyExist].x = j;
+				enemystart[enemyExist].y = i;
 				enemyExist++;
 			}
 		}
 		fprintf(fp,"\n");
 	}
 	for (int i = 0; i < 5; i++)
-		fprintf(fp, "%d %d\n", enemy[i].x, enemy[i].y);
+		fprintf(fp, "%d %d\n", enemystart[i].x, enemystart[i].y);
+
+	gotoxy(start.x + 2 * (pt.x + 1), start.y + pt.y);
+	if (pt.x == MAX_LR - 1)
+	{
+		printf("♣");
+	}
+	else
+	{
+		switch (map[pt.x + 1][pt.y])
+		{
+		case EMPTY:
+			printf("  ");
+			break;
+		case STONE:
+			setColor(gray);
+			printf("■");
+			break;
+		case CASTLE:
+			setColor(sky);
+			printf("城");
+			break;
+		case ENEMYPOS:
+			setColor(sky);
+			printf("■");
+			break;
+		case CASTLE_DOOR:
+			setColor(violet);
+			printf("∩");
+			break;
+		case CASTLE_INV:
+			setColor(gray);
+			printf("XX");
+			break;
+		}
+	}
 }
 
 void waveEdit(FILE* fp)
 {
 	const pos start = { 2,4 }; //맵을 출력하기 시작하는 위치. 
-	enum enemyarr[5][1000] = {0}; //[튀어나오는 위치][나오는 시간], -1이 나오면 전부 끝난것으로 친다. x4에서도 4분 10초나 저장할 수 있는 양이므로 1000이면 충분함.
-	int index = 0,indexTime = 0;
+	enemyT enemyarr[5][1000] = { 0 }; //[튀어나오는 위치][나오는 시간], -1이 나오면 전부 끝난것으로 친다. x4에서도 4분 10초나 저장할 수 있는 양이므로 1000이면 충분함.
+	int index = 0, indexTime = 0;
 	char ch;
-	setColor(bloody);
+	setColor(gray);
 	gotoxy(cmdcol / 3 - 2, 1); printf("웨이브 편집하기");
-	for (int i = 7; i < 30;i++)
-	gotoxy(2 * MAX_LR + 10, i); printf("\t\t\t\t\t\t\t\t\t");//설명 지우기.
+	for (int i = 7; i < 35; i++)
+		gotoxy(2 * MAX_LR + 10, i); printf("                                                                        ");//설명 지우기.
 	gotoxy(2 * MAX_LR + 10, 7); printf("↑↓로 웨이브가 시작되는 점을 선택합니다.");
 	gotoxy(2 * MAX_LR + 10, 9); printf("←→로 나오는 시간대를 설정할 수 있습니다.");
-	gotoxy(2 * MAX_LR + 10, 11); printf("Q: 빈칸");
-	gotoxy(2 * MAX_LR + 10, 13); printf("A: 닭");
-	gotoxy(2 * MAX_LR + 10, 15); printf("S: 좀도둑");
-	gotoxy(2 * MAX_LR + 10, 17); printf("D: 달리기 선수");
-	gotoxy(2 * MAX_LR + 10, 19); printf("F: 해적");
-	gotoxy(2 * MAX_LR + 10, 21); printf("G: 방화범 ");
-	gotoxy(2 * MAX_LR + 10, 23); printf("Z: 방패병");
-	gotoxy(2 * MAX_LR + 10, 25); printf("X:비행선");
-	gotoxy(2 * MAX_LR + 10, 27); printf("C:전차");
-	gotoxy(2 * MAX_LR + 10, 29); printf("V:정예병");
-	gotoxy(2 * MAX_LR + 10, 31); printf("B:이웃 왕");
-	ch = _getch();
-	if (_kbhit())
+	gotoxy(2 * MAX_LR + 10, 11); printf("Q: 빈칸(0)");
+	gotoxy(2 * MAX_LR + 10, 13); printf("W: 웨이브 끝내기(-1)");
+	gotoxy(2 * MAX_LR + 10, 15); printf("A: 닭(1)");
+	gotoxy(2 * MAX_LR + 10, 17); printf("S: 좀도둑(2)");
+	gotoxy(2 * MAX_LR + 10, 19); printf("D: 달리기 선수(3)");
+	gotoxy(2 * MAX_LR + 10, 21); printf("F: 해적(4)");
+	gotoxy(2 * MAX_LR + 10, 23); printf("G: 방화범(5) ");
+	gotoxy(2 * MAX_LR + 10, 25); printf("Z: 방패병(6)");
+	gotoxy(2 * MAX_LR + 10, 27); printf("X:비행선(7)");
+	gotoxy(2 * MAX_LR + 10, 29); printf("C:전차(8)");
+	gotoxy(2 * MAX_LR + 10, 31); printf("V:정예병(9)");
+	gotoxy(2 * MAX_LR + 10, 33); printf("B:이웃 왕(10)");
+	gotoxy(2 * MAX_LR + 68, 38); printf("■");
+	gotoxy(2 * MAX_LR + 8, 38); printf("■");
+	while (1)
 	{
+		setColor(gray);//아래쪽 테이프
+	gotoxy(2 * MAX_LR + 10, 37); printf("▼시작 위치: %d", indexTime);
+		gotoxy(2 * MAX_LR + 10, 38);
+		for (int i = 0; i < 20; i++)
+			printf("%02d ", enemyarr[index][(indexTime + i) % 1000]);
+		gotoxy(start.x + 2 * enemystart[index].x, start.y + enemystart[index].y); setColor(bloody); printf("■");
 		ch = _getch();
-		switch (ch)
+		gotoxy(start.x + 2 * enemystart[index].x, start.y + enemystart[index].y); setColor(sky); printf("■");
+		if (_kbhit())//키 입력받기
 		{
-		case UP:
-			index = (index + 4) % 5;
-			break;
-		case LEFT:
-			index = (index + 1) % 5;
-			break;
-		case RIGHT:
+			ch = _getch();
+			switch (ch)
+			{
+			case UP:
+				index = (index + 4) % 5;
+				while(1)
+					if(enemystart[index].x == -1)
+						index = (index + 4) % 5;
+					else break;
+				break;
+			case DOWN:
+				index = (index + 1) % 5;
+				while (1)
+					if (enemystart[index].x == -1)
+						index =(index + 1) % 5;
+					else break;
+				break;
+			case RIGHT:
+				indexTime = (indexTime + 1) % 1000;
+				break;
+			case LEFT:
+				indexTime = (indexTime + 999) % 1000;
+				break;
+			}
+		}
+		else
+		{
+			if (ch == ENTER)
+			{
+				break;
+			}
+			if(ch == 'q' || ch == 'Q')
+				enemyarr[index][indexTime] = eEmpty;
+			if (ch == 'a' || ch == 'A')
+				enemyarr[index][indexTime] = eChicken;
+			if (ch == 's' || ch == 'S')
+				enemyarr[index][indexTime] = eThief;
+			if (ch == 'd' || ch == 'D')
+				enemyarr[index][indexTime] = eRunner;
+			if (ch == 'f' || ch == 'F')
+				enemyarr[index][indexTime] = ePirates;
+			if (ch == 'g' || ch == 'G')
+				enemyarr[index][indexTime] = eBomb;
+			if (ch == 'z' || ch == 'Z')
+				enemyarr[index][indexTime] = eShield;
+			if (ch == 'x' || ch == 'X')
+				enemyarr[index][indexTime] = eAirship;
+			if (ch == 'c' || ch == 'C')
+				enemyarr[index][indexTime] = eTank;
+			if (ch == 'g' || ch == 'V')
+				enemyarr[index][indexTime] = eKnight;
+			if (ch == 'b' || ch == 'B')
+				enemyarr[index][indexTime] = eKing;
 			indexTime = (indexTime + 1) % 1000;
-			break;
-		case DOWN:
-			indexTime = (indexTime + 999) % 1000;
-			break;
 		}
 	}
-	else
+	for (int i = 0; i < 5; i++)
 	{
-		
+		for (int j = 0; j < 1000; j++)
+		{
+			fprintf(fp, "%d ", enemyarr[i][j]);
+			if (enemyarr[i][j] == -1)
+				break;
+		}
+		fprintf(fp, "\n");
 	}
 }

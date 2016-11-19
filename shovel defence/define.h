@@ -20,10 +20,10 @@ typedef enum color {
 	lviolet, lyellow, white
 } color;
 typedef enum unitT {
-	kid, archery, cannon, laser,warrior,sniper,farm,tank
+	uKid, uArchery, uCannon, uLaser,uWarrior,uSniper,uFarm,uTank
 }unitT;
 typedef enum enemyT {
-	chicken,thief,runner,pirates,bomb,shield,airship,knight,king
+	eEmpty,eChicken,eThief,eRunner,ePirates,eBomb,eShield,eAirship,eTank,eKnight,eKing
 }enemyT;
 typedef struct pos
 {
