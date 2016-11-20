@@ -24,7 +24,7 @@ void game()
 	strcat(filename, string);
 	//copy MAP file to array
 	fp = fopen(filename, "rt");//여기서부터 fp는 맵 파일을 저장한다.
-	fclose(fp);
+	printmap(fp);
 	while (1)//road
 	{
 		//make road
@@ -36,6 +36,7 @@ void game()
 		//if(clear or fail)
 		break;
 	}
+	fclose(fp);
 }
 int printlevel()//초기 레벨 선택 화면을 출력합니다.
 {
@@ -172,4 +173,14 @@ int printlevel()//초기 레벨 선택 화면을 출력합니다.
 			break;
 		}
 	}
+}
+
+void printlevel(FILE* fp)
+{
+	pos start = { 4,2 };
+	initSquare(start);
+	int map[MAX_LR][MAX_UD]
+		for (int i = 0; i < MAX_LR;i++)
+			for (int j = 0; j < MAX_UD;j++)
+			fscanf(fp, "%d",);
 }

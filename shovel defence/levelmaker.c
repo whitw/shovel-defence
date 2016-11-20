@@ -92,16 +92,8 @@ void initMapEdit()
 	system("cls");
 	setColor(gray);
 	gotoxy(cmdcol / 3, 1); printf("레벨 편집하기");
-	gotoxy(start.x - 2, start.y - 1);
-	for (int i = 0; i < MAX_LR + 2; i++)printf("♣");
-	for (int i = 0; i < MAX_UD; i++)
-	{
-		gotoxy(0, 4 + i); printf("♣");
-		gotoxy(MAX_LR * 2 + 2, 4 + i); printf("♣");
-	}
-	gotoxy(0, MAX_UD + 4);
-	for (int i = 0; i < MAX_LR + 2; i++)printf("♣");
-	gotoxy(2 * MAX_LR + 10, 7); printf("↑↓←→로 포인터를 이동할 수 있습니다.");
+	initSquare(start);
+	;(2 * MAX_LR + 10, 7); printf("↑↓←→로 포인터를 이동할 수 있습니다.");
 	gotoxy(2 * MAX_LR + 10, 11); printf("다음 버튼을 눌러서 포인터 위치에 이와 같은 것들을 만들 수 있습니다.");
 	gotoxy(2 * MAX_LR + 10, 15); printf("1: 빈칸");
 	gotoxy(2 * MAX_LR + 10, 17); printf("2: 돌");

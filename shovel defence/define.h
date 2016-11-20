@@ -81,8 +81,9 @@ void game(); //본 게임
 void levelmaker();//레벨 메이커
 void option();
 int getselect();
+void initSquare(pos p);
 /******************function_game*****************/
-
+void printmap(FILE* fp);
 /******************function_levelmaker************/
 void mapEdit(FILE* fp);
 void initMapEdit();
