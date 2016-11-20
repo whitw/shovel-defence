@@ -20,7 +20,7 @@ void game()
 	strcpy(filename, "MAP\\");
 	fscanf(fp, "%s", string);
 	fclose(fp);
-	strcat(string, ".map");
+	strcat(string, ".level");
 	strcat(filename, string);
 	//copy MAP file to array
 	fp = fopen(filename, "rt");//여기서부터 fp는 맵 파일을 저장한다.
@@ -175,12 +175,46 @@ int printlevel()//초기 레벨 선택 화면을 출력합니다.
 	}
 }
 
-void printlevel(FILE* fp)
+void printmap(FILE* fp)
 {
 	pos start = { 4,2 };
+	pos castleMid = { -1,-1 };
 	initSquare(start);
-	int map[MAX_LR][MAX_UD]
-		for (int i = 0; i < MAX_LR;i++)
-			for (int j = 0; j < MAX_UD;j++)
-			fscanf(fp, "%d",);
+	int map[MAX_LR][MAX_UD];
+	for (int i = 0; i < MAX_LR; i++) //파일에서 받아오기 시작
+	{
+		for (int j = 0; j < MAX_UD; j++)
+		{
+			fscanf(fp, "%d", &map[i][j]);
+		}
+		fscanf(fp, "\n");
+	}
+	for (int i = 0; i < MAX_LR; i++) //출력하기 시작
+	{
+		for (int j = 0; j < MAX_UD; j++)
+		{
+			switch (map[i][j])
+			{
+			case EMPTY:
+				printf("  ");
+				break;
+			case STONE:
+				setColor(gray);
+				printf("■");
+				break;
+			case CASTLE_DOOR:
+				setColor(violet);
+				printf("∩");
+				break;
+			case CASTLE_INV:
+				setColor(gray);
+				printf("XX");
+			case CASTLE:
+				castleMid.x = i;
+				castleMid.y = j;
+			}
+		}
+		puts("");
+	}
+	//성 출력하기 시작. castleMid를 중심으로 사방으로 두 칸씩.
 }

@@ -85,7 +85,7 @@ void initSquare(pos p);
 /******************function_game*****************/
 void printmap(FILE* fp);
 /******************function_levelmaker************/
-void mapEdit(FILE* fp);
+int mapEdit(FILE* fp);
 void initMapEdit();
 void waveEdit(FILE* fp);
 #endif

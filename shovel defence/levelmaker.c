@@ -44,7 +44,7 @@ void levelmaker()
 				continue;
 			}
 			strcat(location, string);
-			strcat(location, ".map");
+			strcat(location, ".level");
 			fp = fopen(location, "rt");
 			if (fp != NULL)//이미 같은 이름의 파일이 있음.
 			{
@@ -61,23 +61,25 @@ void levelmaker()
 			}
 		}
 		//맵 편집화면
-		mapEdit(fp);
-		//웨이브 편집화면
-		waveEdit(fp);
-		//시작 이벤트 편집 화면
+		if (mapEdit(fp))
+		{
+			//웨이브 편집화면
+			waveEdit(fp);
+			//시작 이벤트 편집 화면
 
 
-		//끝 이벤트 편집 화면
+			//끝 이벤트 편집 화면
 
 
-		system("cls");
-		gotoxy(cmdcol / 2 - 23, cmdrow / 2); printf("%s에 저장되었습니다. 레벨 선택 화면 마지막에 배치됩니다.",location);
-		Sleep(500);
-		fclose(fp);
-		//levels.txt 편집 시작.
-		fp = fopen("levels.txt", "at");
-		fprintf(fp,"%s 0\n", string);
-		fclose(fp);
+			system("cls");
+			gotoxy(cmdcol / 2 - 23, cmdrow / 2); printf("%s에 저장되었습니다. 레벨 선택 화면 마지막에 배치됩니다.", location);
+			Sleep(500);
+			fclose(fp);
+			//levels.txt 편집 시작.
+			fp = fopen("levels.txt", "at");
+			fprintf(fp, "%s 0\n", string);
+			fclose(fp);
+		}
 	}
 	else if (num == 3) //파일 편집
 	{
@@ -93,7 +95,7 @@ void initMapEdit()
 	setColor(gray);
 	gotoxy(cmdcol / 3, 1); printf("레벨 편집하기");
 	initSquare(start);
-	;(2 * MAX_LR + 10, 7); printf("↑↓←→로 포인터를 이동할 수 있습니다.");
+	gotoxy(2 * MAX_LR + 10, 7); printf("↑↓←→로 포인터를 이동할 수 있습니다.");
 	gotoxy(2 * MAX_LR + 10, 11); printf("다음 버튼을 눌러서 포인터 위치에 이와 같은 것들을 만들 수 있습니다.");
 	gotoxy(2 * MAX_LR + 10, 15); printf("1: 빈칸");
 	gotoxy(2 * MAX_LR + 10, 17); printf("2: 돌");
@@ -107,13 +109,12 @@ void initMapEdit()
 }
 
 
-void mapEdit(FILE* fp) //현재 wt로 열려있음. 닫을 필요는 없다.
+int mapEdit(FILE* fp) //현재 wt로 열려있음. 닫을 필요는 없다.
 {
 	const pos start = { 2,4 }; //맵을 출력하기 시작하는 위치. 
 	int map[MAX_LR][MAX_UD] = {0};
 	int castleExist = 0,enemyExist = 0,doorExist = 0;
 	pos pt = {0,0}; //맵의 가장 왼쪽 위 좌표는 (0,0), 한 칸당 2byte글자 하나 크기를 차지
-	int index;
 	char ch;
 	initMapEdit();
 	gotoxy(start.x + 2 * (pt.x + 1), start.y + pt.y);
@@ -131,7 +132,7 @@ void mapEdit(FILE* fp) //현재 wt로 열려있음. 닫을 필요는 없다.
 		gotoxy(2 * MAX_LR + 10, 34); printf("%d개의 성문이 있습니다.",doorExist);
 		ch = _getch();
 		gotoxy(start.x + 2 * (pt.x + 1), start.y + pt.y);
-		if (pt.x == MAX_LR - 1)
+		if (pt.x == MAX_LR - 1)//포인터를 지우는 작업
 		{
 			printf("♣");
 		}
@@ -164,7 +165,7 @@ void mapEdit(FILE* fp) //현재 wt로 열려있음. 닫을 필요는 없다.
 				break;
 			}
 		}
-		if (_kbhit())
+		if (_kbhit())//키 받기 + 처리
 		{
 			ch = _getch();
 			switch (ch)
@@ -187,6 +188,8 @@ void mapEdit(FILE* fp) //현재 wt로 열려있음. 닫을 필요는 없다.
 		{
 			switch (ch)
 			{
+			case ESC:
+				return 0;
 			case ENTER:
 				if(castleExist)
 				{
@@ -228,7 +231,7 @@ void mapEdit(FILE* fp) //현재 wt로 열려있음. 닫을 필요는 없다.
 
 
 
-				if (ch >= '1' && ch <= '5' && map[pt.x][pt.y] != CASTLE && map[pt.x][pt.y] != CASTLE_INV)
+				if (ch >= '1' && ch <= '5' && map[pt.x][pt.y] != CASTLE && map[pt.x][pt.y] != CASTLE_INV) //문 갯수, 적 입구 갯수 업데이트
 				{
 					if (map[pt.x][pt.y] == CASTLE_DOOR)
 						doorExist--;
@@ -319,10 +322,10 @@ BREAK_GET_KEY:
 	{
 		for (int j = 0; j < MAX_UD; j++)
 		{
-			fprintf(fp, "%d ", map[j][i]);
-			if (map[j][i] == ENEMYPOS)
+			fprintf(fp, "%d ", map[j][i]); //솔직히 말하자면 실수한 부분 맞음.
+			if (map[j][i] == ENEMYPOS)// 어느순간부턴가 앞뒤, 위아래가 순서가 바뀌었는데
 			{
-				enemystart[enemyExist].x = j;
+				enemystart[enemyExist].x = j;// 건들기는 너무 커졌으니 나중에 버그 픽스때 시간 나면 고친다.
 				enemystart[enemyExist].y = i;
 				enemyExist++;
 			}
@@ -366,6 +369,7 @@ BREAK_GET_KEY:
 			break;
 		}
 	}
+	return 1;
 }
 
 void waveEdit(FILE* fp)
