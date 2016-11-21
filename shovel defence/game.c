@@ -177,26 +177,31 @@ int printlevel()//초기 레벨 선택 화면을 출력합니다.
 
 void printmap(FILE* fp)
 {
-	pos start = { 4,2 };
+	pos start = { 2,4 };
 	pos castleMid = { -1,-1 };
+	system("cls");
 	initSquare(start);
+	int i, j;
 	int map[MAX_LR][MAX_UD];
-	for (int i = 0; i < MAX_LR; i++) //파일에서 받아오기 시작
+	for (i = 0; i < MAX_LR; i++) //파일에서 받아오기 시작
 	{
-		for (int j = 0; j < MAX_UD; j++)
+		for (j = 0; j < MAX_UD; j++)
 		{
 			fscanf(fp, "%d", &map[i][j]);
 		}
 		fscanf(fp, "\n");
 	}
-	for (int i = 0; i < MAX_LR; i++) //출력하기 시작
+	gotoxy(start.x,start.y);
+	for (i = 0; i < MAX_UD; i++) //출력하기 시작
 	{
-		for (int j = 0; j < MAX_UD; j++)
+		for (j = 0; j < MAX_LR; j++)
 		{
 			switch (map[i][j])
 			{
+			case ENEMYPOS:
 			case EMPTY:
-				printf("  ");
+				setColor(gray);
+				printf(". ");
 				break;
 			case STONE:
 				setColor(gray);
@@ -209,12 +214,20 @@ void printmap(FILE* fp)
 			case CASTLE_INV:
 				setColor(gray);
 				printf("XX");
+				break;
 			case CASTLE:
-				castleMid.x = i;
-				castleMid.y = j;
+				printf("XX");
+				castleMid.y = i;
+				castleMid.x = j;
 			}
 		}
-		puts("");
+		gotoxy(start.x, start.y + i + 1);
 	}
-	//성 출력하기 시작. castleMid를 중심으로 사방으로 두 칸씩.
+	setColor(sky);
+	gotoxy(start.x + 2 * castleMid.x - 4, start.y + castleMid.y - 2); printf("/|  /|  /|");
+	gotoxy(start.x + 2 * castleMid.x - 4, start.y + castleMid.y - 1); printf("□  □  □");
+	gotoxy(start.x + 2 * castleMid.x - 4, start.y + castleMid.y); printf("□□□□□");
+	gotoxy(start.x + 2 * castleMid.x - 4, start.y + castleMid.y + 1); printf("□++〓++□");
+	gotoxy(start.x + 2 * castleMid.x - 4, start.y + castleMid.y + 2); printf("□□∩□□");
+	gotoxy(0, cmdrow - 2); system("pause");
 }

@@ -30,6 +30,7 @@ void init()//초기화가 필요한 함수들의 초기화.
 	ColorInit();
 	cmdsize(cmdcol, cmdrow);
 	setcursortype(NOCURSOR);
+	srand((unsigned)time(NULL));
 }
 void intro()//인트로 영상을 출력합니다.
 {
@@ -141,12 +142,12 @@ void initSquare(pos p)
 	pos start = p;
 	gotoxy(start.x - 2, start.y - 1);
 	for (int i = 0; i < MAX_LR + 2; i++)printf("♣");
-	for (int i = 0; i < MAX_UD; i++)
+	for (int i = 0; i <= MAX_UD; i++)
 	{
-		gotoxy(0, 4 + i); printf("♣");
-		gotoxy(MAX_LR * 2 + 2, 4 + i); printf("♣");
+		gotoxy(start.x - 2, start.y - 1 + i); printf("♣");
+		gotoxy(MAX_LR * 2 + 2, start.y - 1 + i); printf("♣");
 	}
-	gotoxy(0, MAX_UD + 4);
+	gotoxy(start.x - 2, MAX_UD + start.y);
 	for (int i = 0; i < MAX_LR + 2; i++)printf("♣");
 }
 void option()

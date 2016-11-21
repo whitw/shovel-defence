@@ -374,7 +374,7 @@ BREAK_GET_KEY:
 
 void waveEdit(FILE* fp)
 {
-	const pos start = { 2,4 }; //맵을 출력하기 시작하는 위치. 
+	const pos start = { 2,4 }; //맵을 출력하기 시작하는 위치.  테두리 아님.
 	enemyT enemyarr[5][1000] = { 0 }; //[튀어나오는 위치][나오는 시간], -1이 나오면 전부 끝난것으로 친다. x4에서도 4분 10초나 저장할 수 있는 양이므로 1000이면 충분함.
 	int index = 0, indexTime = 0;
 	char ch;
