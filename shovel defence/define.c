@@ -137,18 +137,18 @@ void printmain()//초기 메인 화면을 출력합니다.
 	gotoxy(cmdcol / 2 - 2, cmdrow * 7 / 10);printf("설정");
 	gotoxy(cmdcol / 2 - 3, cmdrow * 8 / 10); printf("나가기");
 }
-void initSquare(pos p)
+void initSquare(pos p, char* str)
 {
 	pos start = p;
 	gotoxy(start.x - 2, start.y - 1);
-	for (int i = 0; i < MAX_LR + 2; i++)printf("♣");
+	for (int i = 0; i < MAX_LR + 2; i++)printf("%s",str);
 	for (int i = 0; i <= MAX_UD; i++)
 	{
-		gotoxy(start.x - 2, start.y - 1 + i); printf("♣");
-		gotoxy(MAX_LR * 2 + 2, start.y - 1 + i); printf("♣");
+		gotoxy(start.x - 2, start.y - 1 + i); printf("%s",str);
+		gotoxy(start.x + MAX_LR * 2, start.y - 1 + i); printf("%s",str);
 	}
 	gotoxy(start.x - 2, MAX_UD + start.y);
-	for (int i = 0; i < MAX_LR + 2; i++)printf("♣");
+	for (int i = 0; i < MAX_LR + 2; i++)printf("%s",str);
 }
 void option()
 {

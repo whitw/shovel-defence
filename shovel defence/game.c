@@ -25,19 +25,14 @@ void game()
 	//copy MAP file to array
 	fp = fopen(filename, "rt");//여기서부터 fp는 맵 파일을 저장한다.
 	printmap(fp);
-	while (1)//road
-	{
-		//make road
-		//if(good)
-		break;
-	}
-	while (1)//game
-	{
-		//if(clear or fail)
-		break;
-	}
+	printgame();
+	//나머지 그림 그릴 부분 출력하기.
+		//여기서부터 파일을 읽어나가면서 한 줄씩 실행. 항상 road(길파기) -> start(실제 게임) -> if(ifclear) -> end순서를 사용할 것.
+	//road
+	//start
 	fclose(fp);
 }
+
 int printlevel()//초기 레벨 선택 화면을 출력합니다.
 {
 	FILE* fp;//levels.txt에는 저장되어 있는 맵의 목록이 저장되어 있다.
@@ -177,12 +172,11 @@ int printlevel()//초기 레벨 선택 화면을 출력합니다.
 
 void printmap(FILE* fp)
 {
-	pos start = { 2,4 };
+	pos start = { 8, 6 };
 	pos castleMid = { -1,-1 };
-	system("cls");
-	initSquare(start);
 	int i, j;
 	int map[MAX_LR][MAX_UD];
+	rewind(fp);
 	for (i = 0; i < MAX_LR; i++) //파일에서 받아오기 시작
 	{
 		for (j = 0; j < MAX_UD; j++)
@@ -191,6 +185,9 @@ void printmap(FILE* fp)
 		}
 		fscanf(fp, "\n");
 	}
+	system("cls");
+	setColor(yellow);
+	initSquare(start, "●");
 	gotoxy(start.x,start.y);
 	for (i = 0; i < MAX_UD; i++) //출력하기 시작
 	{
@@ -199,6 +196,9 @@ void printmap(FILE* fp)
 			switch (map[i][j])
 			{
 			case ENEMYPOS:
+				setColor(bloody);
+				printf("◆");
+				break;
 			case EMPTY:
 				setColor(gray);
 				printf(". ");
@@ -225,9 +225,42 @@ void printmap(FILE* fp)
 	}
 	setColor(sky);
 	gotoxy(start.x + 2 * castleMid.x - 4, start.y + castleMid.y - 2); printf("/|  /|  /|");
+	setColor(ivory);
 	gotoxy(start.x + 2 * castleMid.x - 4, start.y + castleMid.y - 1); printf("□  □  □");
 	gotoxy(start.x + 2 * castleMid.x - 4, start.y + castleMid.y); printf("□□□□□");
 	gotoxy(start.x + 2 * castleMid.x - 4, start.y + castleMid.y + 1); printf("□++〓++□");
 	gotoxy(start.x + 2 * castleMid.x - 4, start.y + castleMid.y + 2); printf("□□∩□□");
+}
+
+void printgame()
+{
+	pos start = { 8, 6 };
+	gotoxy(start.x+MAX_LR, start.y - 4);
+	setColor(yellow);
+	for (int i = 0; i < MAX_LR / 2 + 1;i++)
+		printf("●");
+	gotoxy(start.x + MAX_LR, start.y - 3);
+	printf("●게임 속도:");
+	gotoxy(start.x + 2 * MAX_LR, start.y - 3);
+	printf("●");
+	gotoxy(start.x + MAX_LR, start.y - 2);
+	printf("●돈:");
+	gotoxy(start.x + 2 * MAX_LR - 4, start.y - 2);
+	printf("코인●");
 	gotoxy(0, cmdrow - 2); system("pause");
+}
+
+
+void readfile(FILE* fp) //파일을 읽으면서 게임 순서를 지정하고 실행한다.
+{
+	char ch[100];
+	fscanf(fp, "%s", ch);
+	switch (ch[0])
+	{
+	case ';'://주석처리
+		break;
+	case '"'://비서가 하는 말. 위쪽 중앙에 배치할까?
+
+		break;
+	}
 }

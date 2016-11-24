@@ -7,6 +7,7 @@ void levelmaker()
 {
 	int num;
 	char string[15] = "",location[25] = "MAP\\";
+	char name[100][15] = { "" };
 	FILE* fp = NULL;
 	system("cls");
 	gotoxy(cmdcol / 2 - 15, cmdrow / 2); printf("숫자를 입력해 주세요.");
@@ -25,11 +26,24 @@ void levelmaker()
 			fclose(fp);
 			fp = fopen("levels.txt", "rt");
 		}
-
+		num = 0;
+		while (!feof(fp))
+		{
+			fscanf(fp, "%s %*d\n", &name[num][0]);
+			num++;
+		}
+		gotoxy(8, 2);
+		printf("현재 플레이할 수 있는 맵은 다음과 같습니다.");
+		for (int i = 0; strcmp(name[i],"") != 0; i++)
+		{
+			gotoxy(8,5+2 * i);printf("%3d.%s", i+1,&name[i][0]);
+		}
+		system("pause");
 		fclose(fp);
 	}
 	else if (num == 2) //새 파일 만들기
 	{
+		mkdir("MAP");
 		gotoxy(cmdcol / 2 - 15, cmdrow / 2); printf("새로 만들 레벨 이름을 입력해주십시오(최대 14자).");
 		gotoxy(cmdcol / 2 - 15, cmdrow / 2 + 1); printf(">");
 		while(1)
@@ -48,10 +62,20 @@ void levelmaker()
 			fp = fopen(location, "rt");
 			if (fp != NULL)//이미 같은 이름의 파일이 있음.
 			{
-				gotoxy(cmdcol / 2 - 14, cmdrow / 2 + 1); printf("이미 같은 이름의 파일이 있습니다. 다른 이름을 시도해주세요.");
-				strcpy(location, "MAP\\");
-				Sleep(2000);
-				continue;
+				gotoxy(cmdcol / 2 - 14, cmdrow / 2 + 1); printf("이미 같은 이름의 파일이 있습니다. 그래도 새로 만들까요?(원 파일이 지워집니다.)(Y/N)");
+				gotoxy(cmdcol / 2 - 14, cmdrow / 2 + 2); printf(">"); scanf("%d", &num);
+				if (num == 'Y' || num == 'y')
+				{
+					fp = fopen(location, "wt");
+					break;
+				}
+				else
+				{
+					gotoxy(cmdcol / 2 - 14, cmdrow / 2 + 3); printf("원래 파일을 유지했습니다.");
+					strcpy(location, "MAP\\");
+					Sleep(2000);
+					continue;
+				}
 			}
 			else //같은 이름을 가진 파일이 없음.
 			{
@@ -65,20 +89,31 @@ void levelmaker()
 		{
 			//웨이브 편집화면
 			waveEdit(fp);
-			//시작 이벤트 편집 화면
-
-
-			//끝 이벤트 편집 화면
-
+			system("cls");
+			gotoxy(cmdcol / 2 - 10, cmdrow / 2 - 2);
+			printf("돈은 얼마나 줄까요?");
+			gotoxy(cmdcol / 2 - 10, cmdrow / 2 - 1);
+			printf(">");
+			scanf("%d",&num);
+			fprintf(fp, "%d\n", num);
+			gotoxy(cmdcol / 2 - 10, cmdrow / 2);
+			printf("성 체력은 얼마로 할까요?");
+			gotoxy(cmdcol / 2 - 10, cmdrow / 2 + 1);
+			printf(">");
+			scanf("%d", &num);
+			fprintf(fp, "%d\n", num);
+			//이벤트 편집 장면
+			//
 
 			system("cls");
-			gotoxy(cmdcol / 2 - 23, cmdrow / 2); printf("%s에 저장되었습니다. 레벨 선택 화면 마지막에 배치됩니다.", location);
-			Sleep(500);
+			setColor(gray);
 			fclose(fp);
-			//levels.txt 편집 시작.
 			fp = fopen("levels.txt", "at");
 			fprintf(fp, "%s 0\n", string);
 			fclose(fp);
+			system("cls");
+			gotoxy(cmdcol / 2 - 23, cmdrow / 2); printf("%s에 저장되었습니다. 레벨 선택 화면 마지막에 배치됩니다.", location);
+			Sleep(500);
 		}
 	}
 	else if (num == 3) //파일 편집
@@ -94,7 +129,7 @@ void initMapEdit()
 	system("cls");
 	setColor(gray);
 	gotoxy(cmdcol / 3, 1); printf("레벨 편집하기");
-	initSquare(start);
+	initSquare(start, "♣");
 	gotoxy(2 * MAX_LR + 10, 7); printf("↑↓←→로 포인터를 이동할 수 있습니다.");
 	gotoxy(2 * MAX_LR + 10, 11); printf("다음 버튼을 눌러서 포인터 위치에 이와 같은 것들을 만들 수 있습니다.");
 	gotoxy(2 * MAX_LR + 10, 15); printf("1: 빈칸");
@@ -191,13 +226,23 @@ int mapEdit(FILE* fp) //현재 wt로 열려있음. 닫을 필요는 없다.
 			case ESC:
 				return 0;
 			case ENTER:
+				setColor(bloody);
 				if(castleExist)
 				{
 					if (enemyExist > 0)
 					{
 						if (doorExist > 0)
 						{
-							goto BREAK_GET_KEY;
+							if (enemyExist - doorExist <= 0)
+							{
+								goto BREAK_GET_KEY;
+							}
+							else
+							{
+								gotoxy(2 * MAX_LR + 10, 31); printf("\"적이 나올 위치가 문 갯수보다 많습니다!\"");
+								Sleep(500);
+								gotoxy(2 * MAX_LR + 10, 31); printf("                                        ");
+							}
 						}
 						else
 						{
@@ -316,7 +361,7 @@ int mapEdit(FILE* fp) //현재 wt로 열려있음. 닫을 필요는 없다.
 		setColor(gray);
 		printf("☜");
 	}
-BREAK_GET_KEY:
+BREAK_GET_KEY://ESC로 편집모드를 나갔음.
 	enemyExist = 0;
 	for (int i = 0;i < MAX_LR; i++)
 	{
@@ -379,9 +424,13 @@ void waveEdit(FILE* fp)
 	int index = 0, indexTime = 0;
 	char ch;
 	setColor(gray);
+	for (int i = 0; i < 5;i++)
+		enemyarr[i][0] = -1;
 	gotoxy(cmdcol / 3 - 2, 1); printf("웨이브 편집하기");
 	for (int i = 7; i < 35; i++)
-		gotoxy(2 * MAX_LR + 10, i); printf("                                                                        ");//설명 지우기.
+	{
+		gotoxy(2 * MAX_LR + 10, i); printf("                                                                    ");//설명 지우기.
+	}
 	gotoxy(2 * MAX_LR + 10, 7); printf("↑↓로 웨이브가 시작되는 점을 선택합니다.");
 	gotoxy(2 * MAX_LR + 10, 9); printf("←→로 나오는 시간대를 설정할 수 있습니다.");
 	gotoxy(2 * MAX_LR + 10, 11); printf("Q: 빈칸(0)");

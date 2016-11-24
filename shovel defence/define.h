@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <Windows.h>
+#include <direct.h>
 /**************Define_SizeCMD******************/
 //콘솔창 크기
 #define cmdrow  40
@@ -81,11 +82,14 @@ void game(); //본 게임
 void levelmaker();//레벨 메이커
 void option();
 int getselect();
-void initSquare(pos p);
+void initSquare(pos p, char* str);
 /******************function_game*****************/
 void printmap(FILE* fp);
+void printgame(); //게임 화면 초기화.
+void readfile(FILE* fp); //파일을 읽으면서 게임 순서를 지정하고 실행한다.
 /******************function_levelmaker************/
 int mapEdit(FILE* fp);
 void initMapEdit();
 void waveEdit(FILE* fp);
+void fileEdit(FILE* fp);//게임 순서를 지정하는 파일을 만듬.
 #endif
