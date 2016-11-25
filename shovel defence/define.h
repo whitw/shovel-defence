@@ -87,6 +87,7 @@ void initSquare(pos p, char* str);
 void printmap(FILE* fp);
 void printgame(); //게임 화면 초기화.
 void readfile(FILE* fp); //파일을 읽으면서 게임 순서를 지정하고 실행한다.
+void talk(pos position , char* str);
 /******************function_levelmaker************/
 int mapEdit(FILE* fp);
 void initMapEdit();

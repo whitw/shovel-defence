@@ -447,9 +447,9 @@ void waveEdit(FILE* fp)
 	gotoxy(2 * MAX_LR + 10, 33); printf("B:이웃 왕(10)");
 	gotoxy(2 * MAX_LR + 68, 38); printf("■");
 	gotoxy(2 * MAX_LR + 8, 38); printf("■");
-	while (1)
+	while (1)//아래쪽 테이프 처리 시작
 	{
-		setColor(gray);//아래쪽 테이프
+		setColor(gray);
 	gotoxy(2 * MAX_LR + 40, 37); printf("▼이곳 위치: %3d", indexTime);
 		gotoxy(2 * MAX_LR + 10, 38);
 		for (int i = -10; i < 10; i++)

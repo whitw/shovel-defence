@@ -146,6 +146,7 @@
     <ClCompile Include="game.c" />
     <ClCompile Include="levelmaker.c" />
     <ClCompile Include="main.c" />
+    <ClCompile Include="printInit.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="define.h" />
