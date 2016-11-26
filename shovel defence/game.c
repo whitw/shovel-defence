@@ -5,7 +5,11 @@ extern char keyShort[2][2];
 extern char keyCommon[6][2];
 extern char keySpeed[3][2];
 int map[MAX_LR][MAX_UD];//받아온 파일은 여기에 복사하고, 여기에다 플레이시 변하는 것들을 담는다. 파일 내용은 건드리지 않는다.
-
+pos enemystart[5];
+int enemyarr[5][1000];
+int money;
+int healthMax;
+int healthCur;
 void game()
 {
 	FILE* fp;
@@ -21,18 +25,18 @@ void game()
 		fp = fopen("config.txt", "wt");
 		fprintf(fp, "0 113\n0 119\n0 101\n0 114\n0 97\n0 115\n0 100\n0 102\n0 97\n0 100\n0 32\n0 27\n-32 72\n-32 75\n-32 77\n-32 80\n0 49\n0 50\n0 51\n");//초기 상태로 복구.
 		fclose(fp);
+		fp = fopen("config.txt", "rt");
 	}
-	else
-	{
 		for (int i = 0; i < 8; i++)
-			fscanf(fp, "%d %d\n", &keyNormal[i][0], &keyNormal[i][1]);
+			fscanf(fp, "%c %c\n", &keyNormal[i][0], &keyNormal[i][1]);
 		for (int i = 0; i < 2;i++)
-			fscanf(fp, "%d %d\n", &keyShort[i][0], &keyShort[i][1]);
+			fscanf(fp, "%c %c\n", &keyShort[i][0], &keyShort[i][1]);
 		for (int i = 0; i < 6;i++)
-			fscanf(fp, "%d %d\n", &keyCommon[i][0], &keyCommon[i][1]);
+			fscanf(fp, "%c %c\n", &keyCommon[i][0], &keyCommon[i][1]);
 		for (int i = 0; i < 3; i++)
-			fscanf(fp, "%d %d\n", &keySpeed[i][0], &keySpeed[i][1]);
-	}//키 설정 가져오기 끝
+			fscanf(fp, "%c %c\n", &keySpeed[i][0], &keySpeed[i][1]);
+		fclose(fp);
+	//키 설정 가져오기 끝
 	fp = fopen("levels.txt", "rt");//파일 이름 가져오기 시작
 	if (fp == NULL)
 	{
@@ -52,7 +56,9 @@ void game()
 	fclose(fp);//파일 이름 가져오기 끝
 	//copy MAP file to array
 	fp = fopen(filename, "rt");//여기서부터 fp는 맵 파일을 저장한다.
-	printmap(fp);//여기서부터 파일을 읽어나가면서 한 줄씩 실행. 항상 road(길파기) -> start(실제 게임) -> if(ifclear) -> end순서를 사용할 것.
+	printmap(fp);//파일을 읽어서 맵에 복사한다. 이 함수가 끝난 뒤에 fp는 이벤트 위치를 가리키고 있어야 한다.
+	printgame();
+	readfile(fp);//여기서 파일을 읽어나가면서 한 줄씩 실행. 항상 road(길파기) -> start(실제 게임) -> if(ifclear) -> end순서를 사용할 것.
 	fclose(fp);
 }
 
@@ -61,6 +67,7 @@ void printmap(FILE* fp)
 	pos start = { 8, 6 };
 	pos castleMid = { -1,-1 };
 	int i, j;
+	int temp;
 	rewind(fp);
 	for (i = 0; i < MAX_LR; i++) //파일에서 받아오기 시작
 	{
@@ -115,7 +122,25 @@ void printmap(FILE* fp)
 	gotoxy(start.x + 2 * castleMid.x - 4, start.y + castleMid.y); printf("□□□□□");
 	gotoxy(start.x + 2 * castleMid.x - 4, start.y + castleMid.y + 1); printf("□++〓++□");
 	gotoxy(start.x + 2 * castleMid.x - 4, start.y + castleMid.y + 2); printf("□□∩□□");
+	//파일의 남은 부분들을 읽어서 저장한다. 적의 시작 위치, 적군 배열, 주어진 돈, 초기 성의 체력.
+	for (int i = 0; i < 5; i++)//적의 시작 위치
+		fscanf(fp,"%d %d", &enemystart[i].x,&enemystart[i].y);
 
+	for (int i = 0; i < 5; i++)//적군 배열
+	{
+		for (int j = 0; j < 1000; j++)
+		{
+			fscanf(fp,"%d", &temp);
+			enemyarr[i][j] = temp;
+			if(temp == -1)
+			{
+				break;
+			}
+		}
+	}
+	fscanf(fp, "%d", &money);
+	fscanf(fp, "%d", &healthMax);
+	healthCur = healthMax;
 }
 void readfile(FILE* fp) //파일을 읽으면서 게임 순서를 지정하고 실행한다.
 {
@@ -159,13 +184,25 @@ void readfile(FILE* fp) //파일을 읽으면서 게임 순서를 지정하고 실행한다.
 				fclose(ftest);
 			}
 		case 'r'://길 파기
+			road(fp);
 			break;
-		case 's':
+		case 's'://게임 시작
+			startGame(fp);
 			break;
 		case 'e'://게임 끝. 별 갯수를 계산하고 레벨에 저장해야 한다.
+			
 			break;
 		}
 	}
 	fclose(config);
 	fclose(level);
+}
+
+void road() //길파기. 파일에서 읽어온 배열을 사용하되 파일은 건들면 안된다.
+{
+
+}
+int startGame() //본 게임. 배열만 이용하고 파일은 건들지 않는다.반환값은 성의 남은 체력. 0이면 게임오버고 체력이 낮으면 별도 적은 방식.
+{
+	return 1;
 }

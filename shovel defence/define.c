@@ -169,13 +169,13 @@ void option()
 	else
 	{
 		for (int i = 0; i < 8; i++)
-			fscanf(fpR, "%d %d\n", &keyNormal[i][0], &keyNormal[i][1]);
+			fscanf(fpR, "%c %c\n", &keyNormal[i][0], &keyNormal[i][1]);
 		for (int i = 0; i < 2; i++)
-			fscanf(fpR, "%d %d\n", &keyShort[i][0], &keyShort[i][1]);
+			fscanf(fpR, "%c %c\n", &keyShort[i][0], &keyShort[i][1]);
 		for (int i = 0; i < 6; i++)
-			fscanf(fpR, "%d %d\n", &keyCommon[i][0], &keyCommon[i][1]);
+			fscanf(fpR, "%c %c\n", &keyCommon[i][0], &keyCommon[i][1]);
 		for (int i = 0; i < 3; i++)
-			fscanf(fpR, "%d %d\n", &keySpeed[i][0], &keySpeed[i][1]);
+			fscanf(fpR, "%c %c\n", &keySpeed[i][0], &keySpeed[i][1]);
 	}
 	printf("Å° ¼³Á¤/ ");
 }
