@@ -5,7 +5,7 @@ pos enemystart[5]; //레이드가 시작되는 지점, 최대 4개
 
 void levelmaker()
 {
-	int num, temp = 0, temp2 = 0;
+	int num, temp = 0, temp2 = 0,temp3 = 0;
 	char string[15] = "",location[25] = "MAP\\";
 	char name[1000][15] = { "" };
 	int score[1000];
@@ -25,14 +25,14 @@ void levelmaker()
 		fp = fopen("levels.txt", "rt");
 		if (fp == NULL)//없을 경우 새로 만든다.
 		{
-			fp = fopen("levels,txt", "wt");
+			fp = fopen("levels.txt", "wt");
 			fclose(fp);
 			fp = fopen("levels.txt", "rt");
 		}
 		num = 0;
 		while (!feof(fp))
 		{
-			fscanf(fp, "%s %d\n", &name[num][0], &score[num]);
+			fscanf(fp, "%s %d\n", &name[num], &score[num]);
 			num++;
 		}
 		gotoxy(8, 2);
@@ -62,6 +62,13 @@ void levelmaker()
 						strcpy(string, name[temp - 1]);
 						strcpy(name[temp - 1], name[temp2 - 1]);
 						strcpy(name[temp2 - 1], string);
+
+						temp3 = score[temp - 1];
+						score[temp - 1] = score[temp2 - 1];
+						score[temp2 - 1] = temp3;
+						rewind(fp);
+						for (int i = 0; i < num; i++)
+							fprintf(fp,"%s %d\n", name[i], score[i]);
 					}
 					system("cls");
 					gotoxy(8, 2);
@@ -78,22 +85,24 @@ void levelmaker()
 		{
 			while (1)
 			{
-				gotoxy(8, 9 + num); printf("불러올 파일 이름은 무엇인가요?");
+				gotoxy(8, 9 + num); printf("불러올 파일 이름은 무엇인가요?(을 눌러 나가기)");
 				gotoxy(8, 10 + num); printf(">"); scanf("%s", string);
 				strcat(location, string);
 				strcat(location, ".level");
-				fptemp = fopen( location, "rt");
+				fptemp = fopen( location, "rt"); //파일 유효성 체크.
 				if (fptemp == NULL)
 				{
 					//fptemp를 닫으면 안된다.
 					gotoxy(8, 11 + num); printf("그런 파일이 없는 것 같습니다.");
 					Sleep(500);
 					gotoxy(8, 11 + num); printf("\t\t\t\t");
+					gotoxy(9, 10 + num); printf("\t\t\t\t");
 				}
 				else
-				{ //깨진 파일인지 아직 체크하지 않음. 반드시 추가해야 된다 나중이라도
-					fprintf(fp, "%s 0\n", string);
+				{ 
+					//깨진 파일인지 아직 체크하지 않음. 반드시 추가해야 된다 나중이라도
 					fclose(fptemp);
+					leveladd(string);
 					gotoxy(8, 11 + num); printf("파일을 추가했습니다!");
 					Sleep(500);
 					gotoxy(8, 11 + num); printf("\t\t\t\t");
@@ -141,7 +150,7 @@ void levelmaker()
 					gotoxy(cmdcol / 2 - 14, cmdrow / 2 + 3); printf("원래 파일을 유지했습니다.");
 					strcpy(location, "MAP\\");
 					Sleep(2000);
-					continue;
+					return;
 				}
 			}
 			else //같은 이름을 가진 파일이 없음.

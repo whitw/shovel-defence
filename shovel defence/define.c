@@ -190,3 +190,12 @@ void talk(pos start,char* str)
 	gotoxy(start.x + 10, start.y + 2); printf("{%s)", str);
 	Sleep(500);
 }
+
+void leveladd(char* string)
+{
+	FILE* fptemp = fopen("levels.txt", "at");
+	fptemp = fopen("levels.txt", "at");
+	fseek(fptemp, 0L, SEEK_END);
+	fprintf(fptemp, "%s 0\n", string);
+	fclose(fptemp);
+}
