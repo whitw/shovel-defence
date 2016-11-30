@@ -198,38 +198,38 @@ void readfile(FILE* fp) //파일을 읽으면서 게임 순서를 지정하고 실행한다.
 
 void makeroad() //길파기. 파일에서 읽어온 배열을 사용하되 파일은 건들면 안된다.
 {//pos enemystart[5]을 이용한다. 초기화는 되어 있으니 그대로 쓰면 됨.
-	road* r[5];
-	char ch[2] = 0;
-	for (int i = 0; i < 5; i++)
-	{
-		r[i] = (road*)malloc(sizeof(road));
-	}
-	while (1)
-	{
-		ch[0] = _getch();
-		ch[1] = 0;
-		if (_kbhit())
-		{
-			ch[0] = 0;
-			ch[1] = _getch();
-		}
-		if (ch[1] == UP || ch[0] == 'w' || ch[0] == 'W')
-		{
-
-		}
-		else if(ch[1] == LEFT|| ch[0] == 'a' || ch[0] == 'a')
-		{
-
-		}
-		else if (ch[1] == RIGHT || ch[0] == 'd' || ch[0] == 'd')
-		{
-
-		}
-		else if (ch[1] == DOWN || ch[0] == 's' || ch[0] == 's')
-		{
-
-		}
-	}
+//	road* r[5];
+//	char ch[2] = {0};
+//	for (int i = 0; i < 5; i++)
+//	{
+//		r[i] = (road*)malloc(sizeof(road));
+//	}
+//	while (1)
+//	{
+//		ch[0] = _getch();
+//		ch[1] = 0;
+//		if (_kbhit())
+//		{
+//			ch[0] = 0;
+//			ch[1] = _getch();
+//		}
+//		if (ch[1] == UP || ch[0] == 'w' || ch[0] == 'W')
+//		{
+//
+//		}
+//		else if(ch[1] == LEFT|| ch[0] == 'a' || ch[0] == 'a')
+//		{
+//
+//		}
+//		else if (ch[1] == RIGHT || ch[0] == 'd' || ch[0] == 'd')
+//		{
+//
+//		}
+//		else if (ch[1] == DOWN || ch[0] == 's' || ch[0] == 's')
+//		{
+//
+//		}
+//	}
 }
 int startGame() //본 게임. 배열만 이용하고 파일은 건들지 않는다.반환값은 성의 남은 체력. 0이면 게임오버고 체력이 낮으면 별도 적은 방식.
 {
