@@ -52,13 +52,14 @@ typedef struct enemy
 }enemy;
 
 typedef enum dr {
-	up, left, right, down
+	up, left, right, down, NO
 } dir;
 
 typedef struct rd
 {
 	pos here; // 블럭의 위치
 	dir direct; 
+	struct rd* before;//이전 길 블럭.
 	struct rd* next; //다음 길 블럭.
 	struct enemy* enemy; //여기가 적 배열의 시작지점. 동적할당을 사용한다.
 }road;
@@ -79,6 +80,7 @@ typedef struct rd
 #define ENEMYPOS 3
 #define CASTLE_DOOR 4
 #define CASTLE_INV 5 //성 주변의 무효한 부분.
+#define INVALID 6 //맵 바깥.
 /*****************Define_function*****************/
 #define ColorInit() GetStdHandle(STD_OUTPUT_HANDLE)
 #define setColor(x) SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), x)

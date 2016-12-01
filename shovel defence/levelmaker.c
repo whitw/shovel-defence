@@ -210,16 +210,25 @@ void initMapEdit()
 	system("cls");
 	setColor(gray);
 	gotoxy(cmdcol / 3, 1); printf("레벨 편집하기");
+	setColor(yellow);
 	initSquare(start, "♣");
+	setColor(ivory);
+	for (int i = 0; i < MAX_UD; i++)
+	{
+		gotoxy(start.x, start.y + i);
+		for (int j = 0; j < MAX_LR; j++)printf("* ");
+	}
+	setColor(gray);
 	gotoxy(2 * MAX_LR + 10, 7); printf("↑↓←→로 포인터를 이동할 수 있습니다.");
-	gotoxy(2 * MAX_LR + 10, 11); printf("다음 버튼을 눌러서 포인터 위치에 이와 같은 것들을 만들 수 있습니다.");
-	gotoxy(2 * MAX_LR + 10, 15); printf("1: 빈칸");
-	gotoxy(2 * MAX_LR + 10, 17); printf("2: 돌");
-	gotoxy(2 * MAX_LR + 10, 19); printf("3: 성. 단 한번만 놓을 수 있으니 신중히 놓으세요.");
-	gotoxy(2 * MAX_LR + 10, 21); printf("4: 적군 출발 위치→길은 여기서부터 출발합니다.");
-	gotoxy(2 * MAX_LR + 10, 22); printf("맵의 가장자리에서 시작하며 적어도 하나는 있어야 합니다. ");
-	gotoxy(2 * MAX_LR + 10, 24); printf("5:성문→길은 여기에서 끝납니다.반드시 성 바로 옆에 있어야 하며");
-	gotoxy(2 * MAX_LR + 10, 25); printf("적군 출발 위치의 갯수보다는 많아야 합니다.");
+	gotoxy(2 * MAX_LR + 10, 11); printf("버튼을 눌러서 놓을 수 있습니다.");
+	gotoxy(2 * MAX_LR + 10, 13); printf("1: 빈칸");
+	gotoxy(2 * MAX_LR + 10, 15); printf("2: 돌");
+	gotoxy(2 * MAX_LR + 10, 17); printf("3: 성. 단 한번만 놓을 수 있으니 신중히 놓으세요.");
+	gotoxy(2 * MAX_LR + 10, 19); printf("4: 적군 출발 위치→길은 여기서부터 출발합니다.");
+	gotoxy(2 * MAX_LR + 10, 20); printf("맵의 가장자리에서 시작하며 적어도 하나는 있어야 합니다. ");
+	gotoxy(2 * MAX_LR + 10, 22); printf("5:성문→길은 여기에서 끝납니다.반드시 성 바로 옆에 있어야 하며");
+	gotoxy(2 * MAX_LR + 10, 23); printf("적군 출발 위치의 갯수보다는 많아야 합니다.");
+	gotoxy(2 * MAX_LR + 10, 25); printf("6: 맵 바깥(비어 보이지만 유닛을 놓을 수 없습니다.)");
 	gotoxy(2 * MAX_LR + 10, 27); printf("9: 모든 정보를 날려버립니다.");
 	gotoxy(2 * MAX_LR + 10, 29); printf("ENTER를 눌러서 완료할 수 있습니다.");//이 때 3, 4와 5이 있는지 체크한다.
 }
@@ -228,13 +237,20 @@ void initMapEdit()
 int mapEdit(FILE* fp) //현재 wt로 열려있음. 닫을 필요는 없다.
 {
 	const pos start = { 2,4 }; //맵을 출력하기 시작하는 위치. 
-	int map[MAX_LR][MAX_UD] = {0};
-	int castleExist = 0,enemyExist = 0,doorExist = 0;
-	pos pt = {0,0}; //맵의 가장 왼쪽 위 좌표는 (0,0), 한 칸당 2byte글자 하나 크기를 차지
+	int map[MAX_LR][MAX_UD] = { 0 };
+	int castleExist = 0, enemyExist = 0, doorExist = 0;
+	pos pt = { 0,0 }; //맵의 가장 왼쪽 위 좌표는 (0,0), 한 칸당 2byte글자 하나 크기를 차지
 	char ch;
 	initMapEdit();
 	gotoxy(start.x + 2 * (pt.x + 1), start.y + pt.y);
 	printf("☜");
+	for (int i = 0; i < MAX_UD; i++)
+	{
+		for (int j = 0; j < MAX_LR; j++)
+		{
+			map[j][i] = INVALID;
+		}
+	}
 	for (int i = 0; i < 5; i++)
 	{
 		enemystart[i].x = -1;
@@ -256,6 +272,10 @@ int mapEdit(FILE* fp) //현재 wt로 열려있음. 닫을 필요는 없다.
 		{
 			switch (map[pt.x + 1][pt.y])
 			{
+			case INVALID:
+				setColor(ivory);
+				printf("* ");
+				break;
 			case EMPTY:
 				printf("  ");
 				break;
@@ -349,7 +369,7 @@ int mapEdit(FILE* fp) //현재 wt로 열려있음. 닫을 필요는 없다.
 			case '9': //맵 갈아 엎기
 				for (int i = 0; i < MAX_LR; i++)
 					for (int j = 0; j < MAX_UD; j++)
-						map[i][j] = EMPTY;
+						map[i][j] = INVALID;
 				castleExist = 0,enemyExist = 0, doorExist = 0;
 				initMapEdit();
 				break;
@@ -357,7 +377,7 @@ int mapEdit(FILE* fp) //현재 wt로 열려있음. 닫을 필요는 없다.
 
 
 
-				if (ch >= '1' && ch <= '5' && map[pt.x][pt.y] != CASTLE && map[pt.x][pt.y] != CASTLE_INV) //문 갯수, 적 입구 갯수 업데이트
+				if (ch >= '1' && ch <= '6' && map[pt.x][pt.y] != CASTLE && map[pt.x][pt.y] != CASTLE_INV) //문 갯수, 적 입구 갯수 업데이트
 				{
 					if (map[pt.x][pt.y] == CASTLE_DOOR)
 						doorExist--;
@@ -366,6 +386,11 @@ int mapEdit(FILE* fp) //현재 wt로 열려있음. 닫을 필요는 없다.
 					gotoxy(start.x + 2 * pt.x, start.y + pt.y);
 					switch (ch - '0' - 1)
 					{
+					case 5:
+						map[pt.x][pt.y] = INVALID;
+						setColor(ivory);
+						printf("* ");
+						break;
 					case EMPTY://빈칸
 						map[pt.x][pt.y] = EMPTY;
 						printf("  ");
