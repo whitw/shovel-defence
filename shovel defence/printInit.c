@@ -1,4 +1,5 @@
 #include "define.h"
+#pragma warning(disable:4996)
 
 int printlevel()//초기 레벨 선택 화면을 출력합니다.
 {
@@ -167,5 +168,4 @@ void printgame()
 			gotoxy(cmdcol * (i + 7) / 12 - 6, cmdrow * 2 / 3 + 5 * j - 2); printf("│┼│");
 			gotoxy(cmdcol * (i + 7) / 12 - 6, cmdrow * 2 / 3 + 5 * j - 1); printf("└─┘");
 		}
-	gotoxy(0, cmdrow - 2); system("pause");
 }

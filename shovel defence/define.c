@@ -159,7 +159,6 @@ void option()
 {
 	FILE* fpR = fopen("config.txt", "rt");
 	FILE* fpW = NULL;
-	char ch;
 	if (fpR == NULL)
 	{
 		fpW = fopen("config.txt", "wt");
@@ -180,7 +179,7 @@ void option()
 	printf("Å° ¼³Á¤/ ");
 }
 
-void talk(pos start,char* str)
+void talk(pos start,char* str, int time)
 {
 	setColor(gray);
 	gotoxy(start.x, start.y); printf("¦£¦¡¦¤");
@@ -188,7 +187,7 @@ void talk(pos start,char* str)
 	gotoxy(start.x - 1, start.y + 2); printf("(¡Û_.._¢Å)");
 	setColor(white);
 	gotoxy(start.x + 10, start.y + 2); printf("{%s)", str);
-	Sleep(500);
+	Sleep(time);
 }
 
 void leveladd(char* string)

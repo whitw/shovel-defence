@@ -1,5 +1,5 @@
-#ifndef define_H
-#define define_H
+#pragma once
+
 #include <stdio.h>
 #include <conio.h>
 #include <stdlib.h>
@@ -52,23 +52,23 @@ typedef struct enemy
 }enemy;
 
 typedef enum dr {
-	up, left, right, down, NO
+	UP = 72,
+	LEFT = 75,
+	RIGHT = 77,
+	DOWN = 80,
+	NO = 0
 } dir;
-
 typedef struct rd
 {
 	pos here; // 블럭의 위치
 	dir direct; 
 	struct rd* before;//이전 길 블럭.
 	struct rd* next; //다음 길 블럭.
-	struct enemy* enemy; //여기가 적 배열의 시작지점. 동적할당을 사용한다.
-}road;
+	struct enemy* enemyStart; //여기가 적 배열의 시작지점. 동적할당을 사용한다.
+}_road;
 
 /****************Define_Ascii********************/
-#define UP 72
-#define LEFT 75
-#define RIGHT 77
-#define DOWN 80
+
 #define ENTER 13
 #define SPACE 32
 #define ESC 27
@@ -81,6 +81,7 @@ typedef struct rd
 #define CASTLE_DOOR 4
 #define CASTLE_INV 5 //성 주변의 무효한 부분.
 #define INVALID 6 //맵 바깥.
+#define ROAD 10 //길.
 /*****************Define_function*****************/
 #define ColorInit() GetStdHandle(STD_OUTPUT_HANDLE)
 #define setColor(x) SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), x)
@@ -98,17 +99,3 @@ void levelmaker();//레벨 메이커
 void option();
 int getselect();
 void initSquare(pos p, char* str);
-/******************function_game*****************/
-void printmap(FILE* fp);
-void printgame(); //게임 화면 초기화.
-void readfile(FILE* fp); //파일을 읽으면서 게임 순서를 지정하고 실행한다.
-void talk(pos position , char* str);
-void makeroad(); //길파기. 파일에서 읽어온 배열을 사용하되 파일은 건들면 안된다.
-int startGame(); //역시 배열만 이용하고 파일은 건들지 않는다. 반환값은 성의 남은 체력. 0이면 게임오버고 체력이 낮으면 별도 적은 방식.
-/******************function_levelmaker************/
-int mapEdit(FILE* fp);
-void initMapEdit();
-void waveEdit(FILE* fp);
-void fileEdit(FILE* fp);//게임 순서를 지정하는 파일을 만듬.
-void leveladd(char* str);
-#endif

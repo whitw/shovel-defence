@@ -150,6 +150,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="define.h" />
+    <ClInclude Include="game.h" />
+    <ClInclude Include="levelmaker.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\readme.txt" />

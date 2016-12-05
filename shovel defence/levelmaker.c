@@ -1,208 +1,9 @@
 #include "define.h"
+#include "levelmaker.h"
 #pragma warning(disable:4996)
 
 pos enemystart[5]; //레이드가 시작되는 지점, 최대 4개
 
-void levelmaker()
-{
-	int num, temp = 0, temp2 = 0,temp3 = 0;
-	char string[15] = "",location[25] = "MAP\\";
-	char name[1000][15] = { "" };
-	int score[1000];
-	FILE* fp = NULL;
-	FILE* fptemp = NULL;
-	system("cls");
-	gotoxy(cmdcol / 2 - 15, cmdrow / 2); printf("숫자를 입력해 주세요.");
-	gotoxy(cmdcol / 2 - 15, cmdrow / 2 + 2); printf("1. 파일 정렬하기");
-	gotoxy(cmdcol / 2 - 15, cmdrow / 2 + 3); printf("2. 새 파일 만들기");
-	gotoxy(cmdcol / 2 - 15, cmdrow / 2 + 4); printf("3. 파일 편집하기");
-	gotoxy(cmdcol / 2 - 15, cmdrow / 2 + 5); printf("4. 나가기");
-	gotoxy(cmdcol / 2 - 15, cmdrow / 2 + 6); printf(">"); scanf("%d", &num);
-	if (_kbhit())_getch();
-	system("cls");
-	if (num == 1) //맵 파일 정렬
-	{
-		fp = fopen("levels.txt", "rt");
-		if (fp == NULL)//없을 경우 새로 만든다.
-		{
-			fp = fopen("levels.txt", "wt");
-			fclose(fp);
-			fp = fopen("levels.txt", "rt");
-		}
-		num = 0;
-		while (!feof(fp))
-		{
-			fscanf(fp, "%s %d\n", &name[num], &score[num]);
-			num++;
-		}
-		gotoxy(8, 2);
-		setColor(gray);
-		printf("현재 플레이할 수 있는 맵은 다음과 같습니다.");
-		for (int i = 0; 5 + 2 * i < 170 && strcmp(name[i], "") != 0; i++)
-		{
-			gotoxy(10 + 20 * (i / 30), 3 + (i % 30)); printf("%3d.%s", i + 1, &name[i][0]);
-		}
-		gotoxy(8, 34); printf("재 정렬하거나 현재 플레이 할 수 없는 맵을 불러올 수 있습니다.");
-		gotoxy(8, 35); printf("1을 눌러 두 파일의 순서를 바꾸거나, 2를 눌러 맵을 불러올 수 있습니다.그 이외에는 이 화면을 나갑니다.>"); temp = _getch();
-		if (temp == '1')
-		{
-			while (1)
-			{
-				gotoxy(8, 36); printf("서로 바꿀 두 파일의 번호를 입력해주세요.(0을 눌러 취소)");
-				gotoxy(8, 37); printf("첫번째:"); scanf("%d", &temp);
-				if (temp != 0)
-				{
-					gotoxy(8, 37); printf("두번째:"); scanf("%d", &temp2);
-				}
-				else break;
-				if (temp2 != 0)
-				{
-					if (temp>0 && temp2> 0 && temp - 1 < 1000 && temp2 - 1 < 1000 && strcmp(name[temp - 1], "") != 0 && strcmp(name[temp2 - 1], "") != 0)
-					{
-						strcpy(string, name[temp - 1]);
-						strcpy(name[temp - 1], name[temp2 - 1]);
-						strcpy(name[temp2 - 1], string);
-
-						temp3 = score[temp - 1];
-						score[temp - 1] = score[temp2 - 1];
-						score[temp2 - 1] = temp3;
-						rewind(fp);
-						for (int i = 0; i < num; i++)
-							fprintf(fp,"%s %d\n", name[i], score[i]);
-					}
-					system("cls");
-					gotoxy(8, 2);
-					printf("현재 플레이할 수 있는 맵은 다음과 같습니다.");
-					for (int i = 0; 5 + 2 * i < 170 && strcmp(name[i], "") != 0; i++)
-					{
-						gotoxy(10 + 20 * (i / 30), 3 + (i % 30)); printf("%3d.%s", i + 1, &name[i][0]);
-					}
-				}
-				else break;
-			}
-		}
-		else if (temp == '2')
-		{
-			while (1)
-			{
-				gotoxy(8, 9 + num); printf("불러올 파일 이름은 무엇인가요?(을 눌러 나가기)");
-				gotoxy(8, 10 + num); printf(">"); scanf("%s", string);
-				strcat(location, string);
-				strcat(location, ".level");
-				fptemp = fopen( location, "rt"); //파일 유효성 체크.
-				if (fptemp == NULL)
-				{
-					//fptemp를 닫으면 안된다.
-					gotoxy(8, 11 + num); printf("그런 파일이 없는 것 같습니다.");
-					Sleep(500);
-					gotoxy(8, 11 + num); printf("\t\t\t\t");
-					gotoxy(9, 10 + num); printf("\t\t\t\t");
-				}
-				else
-				{ 
-					//깨진 파일인지 아직 체크하지 않음. 반드시 추가해야 된다 나중이라도
-					fclose(fptemp);
-					leveladd(string);
-					gotoxy(8, 11 + num); printf("파일을 추가했습니다!");
-					Sleep(500);
-					gotoxy(8, 11 + num); printf("\t\t\t\t");
-					break;
-				}
-			}
-		}
-	fclose(fp);
-	}
-
-
-
-
-
-	else if (num == 2) //새 파일 만들기
-	{
-		mkdir("MAP");
-		gotoxy(cmdcol / 2 - 15, cmdrow / 2); printf("새로 만들 레벨 이름을 입력해주십시오(최대 14자).");
-		gotoxy(cmdcol / 2 - 15, cmdrow / 2 + 1); printf(">");
-		while(1)
-		{
-			gotoxy(cmdcol / 2 - 14, cmdrow / 2 + 1); printf("\t\t\t\t\t\t\t\t\t\t");
-			gotoxy(cmdcol / 2 - 14, cmdrow / 2 + 1); scanf("%s", string); getchar();
-			if (strlen(string) > 14)//이름이 너무 김.
-			{
-				gotoxy(cmdcol / 2 - 14, cmdrow / 2 + 1); printf("이름이 너무 깁니다. 다시 시도해주세요.");
-				strcpy(location, "MAP\\");
-				Sleep(1000);
-				continue;
-			}
-			strcat(location, string);
-			strcat(location, ".level");
-			fp = fopen(location, "rt");
-			if (fp != NULL)//이미 같은 이름의 파일이 있음.
-			{
-				gotoxy(cmdcol / 2 - 14, cmdrow / 2 + 1); printf("이미 같은 이름의 파일이 있습니다. 그래도 새로 만들까요?(원 파일이 지워집니다.)(Y/N)");
-				gotoxy(cmdcol / 2 - 14, cmdrow / 2 + 2); printf(">"); scanf("%d", &num);
-				if (num == 'Y' || num == 'y')
-				{
-					fp = fopen(location, "wt");
-					break;
-				}
-				else
-				{
-					gotoxy(cmdcol / 2 - 14, cmdrow / 2 + 3); printf("원래 파일을 유지했습니다.");
-					strcpy(location, "MAP\\");
-					Sleep(2000);
-					return;
-				}
-			}
-			else //같은 이름을 가진 파일이 없음.
-			{
-				//열린게 없으니 fclose를 쓰지 않는다.
-				fp = fopen(location, "wt");
-				break;
-			}
-		}
-		//맵 편집화면
-		if (mapEdit(fp))
-		{
-			//웨이브 편집화면
-			waveEdit(fp);
-			system("cls");
-			gotoxy(cmdcol / 2 - 10, cmdrow / 2 - 2);
-			printf("돈은 얼마나 줄까요?");
-			gotoxy(cmdcol / 2 - 10, cmdrow / 2 - 1);
-			printf(">");
-			scanf("%d",&num);
-			fprintf(fp, "%d\n", num);
-			gotoxy(cmdcol / 2 - 10, cmdrow / 2);
-			printf("성 체력은 얼마로 할까요?");
-			gotoxy(cmdcol / 2 - 10, cmdrow / 2 + 1);
-			printf(">");
-			scanf("%d", &num);
-			fprintf(fp, "%d\n", num);
-			//이벤트 편집 장면
-			//
-
-			system("cls");
-			setColor(gray);
-			fclose(fp);
-			fp = fopen("levels.txt", "at");
-			fprintf(fp, "%s 0\n", string);
-			fclose(fp);
-			system("cls");
-			gotoxy(cmdcol / 2 - 23, cmdrow / 2); printf("%s에 저장되었습니다. 레벨 선택 화면 마지막에 배치됩니다.", location);
-			Sleep(500);
-		}
-	}
-
-
-
-
-
-	else if (num == 3) //파일 편집
-	{
-
-	}
-	//그 이외의 경우에는 숫자에 상관 없이 나가기
-}
 
 void initMapEdit()
 {
@@ -233,11 +34,10 @@ void initMapEdit()
 	gotoxy(2 * MAX_LR + 10, 29); printf("ENTER를 눌러서 완료할 수 있습니다.");//이 때 3, 4와 5이 있는지 체크한다.
 }
 
-
 int mapEdit(FILE* fp) //현재 wt로 열려있음. 닫을 필요는 없다.
 {
 	const pos start = { 2,4 }; //맵을 출력하기 시작하는 위치. 
-	int map[MAX_LR][MAX_UD] = { 0 };
+	int map[MAX_UD][MAX_LR] = { 0 };
 	int castleExist = 0, enemyExist = 0, doorExist = 0;
 	pos pt = { 0,0 }; //맵의 가장 왼쪽 위 좌표는 (0,0), 한 칸당 2byte글자 하나 크기를 차지
 	char ch;
@@ -248,7 +48,7 @@ int mapEdit(FILE* fp) //현재 wt로 열려있음. 닫을 필요는 없다.
 	{
 		for (int j = 0; j < MAX_LR; j++)
 		{
-			map[j][i] = INVALID;
+			map[i][j] = INVALID;
 		}
 	}
 	for (int i = 0; i < 5; i++)
@@ -270,7 +70,7 @@ int mapEdit(FILE* fp) //현재 wt로 열려있음. 닫을 필요는 없다.
 		}
 		else
 		{
-			switch (map[pt.x + 1][pt.y])
+			switch (map[pt.y][pt.x + 1])
 			{
 			case INVALID:
 				setColor(ivory);
@@ -367,8 +167,8 @@ int mapEdit(FILE* fp) //현재 wt로 열려있음. 닫을 필요는 없다.
 				}
 				break;
 			case '9': //맵 갈아 엎기
-				for (int i = 0; i < MAX_LR; i++)
-					for (int j = 0; j < MAX_UD; j++)
+				for (int i = 0; i < MAX_UD; i++)
+					for (int j = 0; j < MAX_LR; j++)
 						map[i][j] = INVALID;
 				castleExist = 0,enemyExist = 0, doorExist = 0;
 				initMapEdit();
@@ -377,26 +177,26 @@ int mapEdit(FILE* fp) //현재 wt로 열려있음. 닫을 필요는 없다.
 
 
 
-				if (ch >= '1' && ch <= '6' && map[pt.x][pt.y] != CASTLE && map[pt.x][pt.y] != CASTLE_INV) //문 갯수, 적 입구 갯수 업데이트
+				if (ch >= '1' && ch <= '6' && map[pt.y][pt.x] != CASTLE && map[pt.y][pt.x] != CASTLE_INV) //문 갯수, 적 입구 갯수 업데이트
 				{
-					if (map[pt.x][pt.y] == CASTLE_DOOR)
+					if (map[pt.y][pt.x] == CASTLE_DOOR)
 						doorExist--;
-					if (map[pt.x][pt.y] == ENEMYPOS)
+					if (map[pt.y][pt.x] == ENEMYPOS)
 						enemyExist--;
 					gotoxy(start.x + 2 * pt.x, start.y + pt.y);
 					switch (ch - '0' - 1)
 					{
 					case 5:
-						map[pt.x][pt.y] = INVALID;
+						map[pt.y][pt.x] = INVALID;
 						setColor(ivory);
 						printf("* ");
 						break;
 					case EMPTY://빈칸
-						map[pt.x][pt.y] = EMPTY;
+						map[pt.y][pt.x] = EMPTY;
 						printf("  ");
 						break;
 					case STONE://돌
-						map[pt.x][pt.y] = STONE;
+						map[pt.y][pt.x] = STONE;
 						setColor(gray);
 						printf("■");
 						break;
@@ -409,13 +209,13 @@ int mapEdit(FILE* fp) //현재 wt로 열려있음. 닫을 필요는 없다.
 								for (int i = -2; i <= 2; i++)
 									for (int j = -2; j <= 2; j++)
 									{
-										if (map[pt.x+i][pt.y+j] == CASTLE_DOOR)
+										if (map[pt.y+i][pt.x+j] == CASTLE_DOOR)
 											doorExist--;
-										if (map[pt.x+i][pt.y+j] == ENEMYPOS)
+										if (map[pt.y+i][pt.x+j] == ENEMYPOS)
 											enemyExist--;
-										map[pt.x + i][pt.y + j] = CASTLE_INV; //성 주변에 유닛을 놓으면 안된다. 기능적으로는 BLOCK과 같으나 성문을 체크할 때 더 쉬움.
+										map[pt.y + i][pt.x + j] = CASTLE_INV; //성 주변에 유닛을 놓으면 안된다. 기능적으로는 BLOCK과 같으나 성문을 체크할 때 더 쉬움.
 									}
-								map[pt.x][pt.y] = CASTLE;
+								map[pt.y][pt.x] = CASTLE;
 								setColor(gray);
 								for (int i = -2; i <= 2; i++)
 									for (int j = -2; j <= 2; j++)
@@ -428,9 +228,9 @@ int mapEdit(FILE* fp) //현재 wt로 열려있음. 닫을 필요는 없다.
 						}
 						else
 						{
-							if (map[pt.x][pt.y] == CASTLE_DOOR)
+							if (map[pt.y][pt.x] == CASTLE_DOOR)
 								doorExist++;
-							if (map[pt.x][pt.y] == ENEMYPOS)
+							if (map[pt.y][pt.x] == ENEMYPOS)
 								enemyExist++;
 						}
 						break;
@@ -438,7 +238,7 @@ int mapEdit(FILE* fp) //현재 wt로 열려있음. 닫을 필요는 없다.
 						if (enemyExist < 5)
 						{
 							enemyExist++;
-							map[pt.x][pt.y] = ENEMYPOS;
+							map[pt.y][pt.x] = ENEMYPOS;
 							setColor(sky);
 							printf("■");
 						}
@@ -447,10 +247,10 @@ int mapEdit(FILE* fp) //현재 wt로 열려있음. 닫을 필요는 없다.
 						for (int i = -1; i <= 1; i++)
 							for (int j = -1; j <= 1; j++)
 							{
-								if (map[pt.x + i][pt.y + j] == CASTLE_INV)
+								if (map[pt.y + i][pt.x + j] == CASTLE_INV)
 								{
 									doorExist++;
-									map[pt.x][pt.y] = CASTLE_DOOR; //성문 유효성 체크.
+									map[pt.y][pt.x] = CASTLE_DOOR; //성문 유효성 체크.
 									setColor(violet);
 									gotoxy(start.x + 2 * pt.x, start.y + pt.y); printf("∩");
 									goto BREAK_CASE_CASTLE_DOOR;
@@ -469,14 +269,14 @@ int mapEdit(FILE* fp) //현재 wt로 열려있음. 닫을 필요는 없다.
 	}
 BREAK_GET_KEY://ENTER로 편집모드를 나갔음.
 	enemyExist = 0;
-	for (int i = 0;i < MAX_LR; i++)
+	for (int i = 0;i < MAX_UD; i++)
 	{
-		for (int j = 0; j < MAX_UD; j++)
+		for (int j = 0; j < MAX_LR; j++)
 		{
-			fprintf(fp, "%d ", map[j][i]); //솔직히 말하자면 실수한 부분 맞음.
-			if (map[j][i] == ENEMYPOS)// 어느순간부턴가 앞뒤, 위아래가 순서가 바뀌었는데
+			fprintf(fp, "%d ", map[i][j]);
+			if (map[i][j] == ENEMYPOS)
 			{
-				enemystart[enemyExist].x = j;// 건들기는 너무 커졌으니 나중에 버그 픽스때 시간 나면 고친다.
+				enemystart[enemyExist].x = j;
 				enemystart[enemyExist].y = i;
 				enemyExist++;
 			}
@@ -493,7 +293,7 @@ BREAK_GET_KEY://ENTER로 편집모드를 나갔음.
 	}
 	else
 	{
-		switch (map[pt.x + 1][pt.y])
+		switch (map[pt.y][pt.x + 1])
 		{
 		case EMPTY:
 			printf("  ");
@@ -632,5 +432,185 @@ void waveEdit(FILE* fp)
 				break;
 		}
 		fprintf(fp, "\n");
+	}
+}
+
+void sortMapFile()
+{
+	FILE* fp = NULL, *fptemp = NULL;
+	int num, temp = 0, temp2 = 0, temp3 = 0;
+	char string[15] = "", location[25] = "MAP\\";
+	char name[1000][15] = { "" };
+	int score[1000];
+	fp = fopen("levels.txt", "rt");
+	if (fp == NULL)//없을 경우 새로 만든다.
+	{
+		fp = fopen("levels.txt", "wt");
+		fclose(fp);
+		fp = fopen("levels.txt", "rt");
+	}
+	num = 0;
+	while (!feof(fp))
+	{
+		fscanf(fp, "%s %d\n", &name[num], &score[num]);
+		num++;
+	}
+	gotoxy(8, 2);
+	setColor(gray);
+	printf("현재 플레이할 수 있는 맵은 다음과 같습니다.");
+	for (int i = 0; 5 + 2 * i < 170 && strcmp(name[i], "") != 0; i++)
+	{
+		gotoxy(10 + 20 * (i / 30), 3 + (i % 30)); printf("%3d.%s", i + 1, &name[i][0]);
+	}
+	gotoxy(8, 34); printf("재 정렬하거나 현재 플레이 할 수 없는 맵을 불러올 수 있습니다.");
+	gotoxy(8, 35); printf("1을 눌러 두 파일의 순서를 바꾸거나, 2를 눌러 맵을 불러올 수 있습니다.그 이외에는 이 화면을 나갑니다.>"); temp = _getch();
+	if (temp == '1')
+	{
+		while (1)
+		{
+			gotoxy(8, 36); printf("서로 바꿀 두 파일의 번호를 입력해주세요.(0을 눌러 취소)");
+			gotoxy(8, 37); printf("첫번째:"); scanf("%d", &temp);
+			if (temp != 0)
+			{
+				gotoxy(8, 37); printf("두번째:"); scanf("%d", &temp2);
+			}
+			else break;
+			if (temp2 != 0)
+			{
+				if (temp>0 && temp2> 0 && temp - 1 < 1000 && temp - 1< num && temp2 - 1 < 1000 && temp2 - 1 < num && strcmp(name[temp - 1], "") != 0 && strcmp(name[temp2 - 1], "") != 0)
+				{
+					strcpy(string, name[temp - 1]);
+					strcpy(name[temp - 1], name[temp2 - 1]);
+					strcpy(name[temp2 - 1], string);
+
+					temp3 = score[temp - 1];
+					score[temp - 1] = score[temp2 - 1];
+					score[temp2 - 1] = temp3;
+					fclose(fp);
+					fp = fopen("levels.txt", "wt");
+					for (int i = 0; i < num; i++)
+						fprintf(fp, "%s %d\n", name[i], score[i]);
+				}
+				system("cls");
+				gotoxy(8, 2);
+				printf("현재 플레이할 수 있는 맵은 다음과 같습니다.");
+				for (int i = 0; 5 + 2 * i < 170 && strcmp(name[i], "") != 0; i++)
+				{
+					gotoxy(10 + 20 * (i / 30), 3 + (i % 30)); printf("%3d.%s", i + 1, &name[i][0]);
+				}
+			}
+			else break;
+		}
+	}
+	else if (temp == '2')
+	{
+		while (1)
+		{
+			gotoxy(8, 9 + num); printf("불러올 파일 이름은 무엇인가요?(을 눌러 나가기)");
+			gotoxy(8, 10 + num); printf(">"); scanf("%s", string);
+			strcat(location, string);
+			strcat(location, ".level");
+			fptemp = fopen(location, "rt"); //파일 유효성 체크.
+			if (fptemp == NULL)
+			{
+				//fptemp를 닫으면 안된다.
+				gotoxy(8, 11 + num); printf("그런 파일이 없는 것 같습니다.");
+				Sleep(500);
+				gotoxy(8, 11 + num); printf("\t\t\t\t");
+				gotoxy(9, 10 + num); printf("\t\t\t\t");
+			}
+			else
+			{
+				//깨진 파일인지 아직 체크하지 않음. 반드시 추가해야 된다 나중이라도
+				fclose(fptemp);
+				leveladd(string);
+				gotoxy(8, 11 + num); printf("파일을 추가했습니다!");
+				Sleep(500);
+				gotoxy(8, 11 + num); printf("\t\t\t\t");
+				break;
+			}
+		}
+	}
+	fclose(fp);
+}
+
+void newMapFile()
+{
+	int num, temp = 0, temp2 = 0, temp3 = 0;
+	char string[15] = "", location[25] = "MAP\\";
+	char name[1000][15] = { "" };
+	FILE* fp = NULL;
+	FILE* fptemp = NULL;
+	mkdir("MAP");
+	gotoxy(cmdcol / 2 - 15, cmdrow / 2); printf("새로 만들 레벨 이름을 입력해주십시오(최대 14자).");
+	gotoxy(cmdcol / 2 - 15, cmdrow / 2 + 1); printf(">");
+	while (1)
+	{
+		gotoxy(cmdcol / 2 - 14, cmdrow / 2 + 1); printf("\t\t\t\t\t\t\t\t\t\t");
+		gotoxy(cmdcol / 2 - 14, cmdrow / 2 + 1); scanf("%s", string); getchar();
+		if (strlen(string) > 14)//이름이 너무 김.
+		{
+			gotoxy(cmdcol / 2 - 14, cmdrow / 2 + 1); printf("이름이 너무 깁니다. 다시 시도해주세요.");
+			strcpy(location, "MAP\\");
+			Sleep(1000);
+			continue;
+		}
+		strcat(location, string);
+		strcat(location, ".level");
+		fp = fopen(location, "rt");
+		if (fp != NULL)//이미 같은 이름의 파일이 있음.
+		{
+			gotoxy(cmdcol / 2 - 14, cmdrow / 2 + 1); printf("이미 같은 이름의 파일이 있습니다. 그래도 새로 만들까요?(원 파일이 지워집니다.)(Y/N)");
+			gotoxy(cmdcol / 2 - 14, cmdrow / 2 + 2); printf(">"); scanf("%d", &num);
+			if (num == 'Y' || num == 'y')
+			{
+				fp = fopen(location, "wt");
+				break;
+			}
+			else
+			{
+				gotoxy(cmdcol / 2 - 14, cmdrow / 2 + 3); printf("원래 파일을 유지했습니다.");
+				strcpy(location, "MAP\\");
+				Sleep(2000);
+				return;
+			}
+		}
+		else //같은 이름을 가진 파일이 없음.
+		{
+			//열린게 없으니 fclose를 쓰지 않는다.
+			fp = fopen(location, "wt");
+			break;
+		}
+	}
+	//맵 편집화면
+	if (mapEdit(fp))
+	{
+		//웨이브 편집화면
+		waveEdit(fp);
+		system("cls");
+		gotoxy(cmdcol / 2 - 10, cmdrow / 2 - 2);
+		printf("돈은 얼마나 줄까요?");
+		gotoxy(cmdcol / 2 - 10, cmdrow / 2 - 1);
+		printf(">");
+		scanf("%d", &num);
+		fprintf(fp, "%d\n", num);
+		gotoxy(cmdcol / 2 - 10, cmdrow / 2);
+		printf("성 체력은 얼마로 할까요?");
+		gotoxy(cmdcol / 2 - 10, cmdrow / 2 + 1);
+		printf(">");
+		scanf("%d", &num);
+		fprintf(fp, "%d\n", num);
+		//이벤트 편집 장면
+		//
+
+		system("cls");
+		setColor(gray);
+		fclose(fp);
+		fp = fopen("levels.txt", "at");
+		fprintf(fp, "%s 0\n", string);
+		fclose(fp);
+		system("cls");
+		gotoxy(cmdcol / 2 - 23, cmdrow / 2); printf("%s에 저장되었습니다. 레벨 선택 화면 마지막에 배치됩니다.", location);
+		Sleep(500);
 	}
 }

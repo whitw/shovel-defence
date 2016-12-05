@@ -1,12 +1,27 @@
 #include "define.h"
+#include "game.h"
 #pragma warning(disable:4996)
+
+//extern : Key
 extern char keyNormal[8][2];
 extern char keyShort[2][2];
 extern char keyCommon[6][2];
 extern char keySpeed[3][2];
-int map[MAX_LR][MAX_UD];//받아온 파일은 여기에 복사하고, 여기에다 플레이시 변하는 것들을 담는다. 파일 내용은 건드리지 않는다.
+
+//Road
+
+pos start = { 8, 6 };
+_road road[5];
+_road* roadEnd[5]; //현재 작업중인 길의 끝지점을 저장함.
+int currentRoad = 0; //지금 선택하고 있는 길
+
+//MAP & config
+
+int map[MAX_UD][MAX_LR];//받아온 파일은 여기에 복사하고, 여기에다 플레이시 변하는 것들을 담는다. 파일 내용은 건드리지 않는다.
 pos enemystart[5];
+pos pt = {0,0};
 int enemyarr[5][1000], money, healthMax, healthCur;
+int gameSpeed = 1;
 
 void game()
 {
@@ -59,29 +74,27 @@ void game()
 	readfile(fp);//여기서 파일을 읽어나가면서 한 줄씩 실행. 항상 road(길파기) -> start(실제 게임) -> if(ifclear) -> end순서를 사용할 것.
 	fclose(fp);
 }
-
 void printmap(FILE* fp)
 {
-	pos start = { 8, 6 };
 	pos castleMid = { -1,-1 };
-	int i, j;
 	int temp;
 	rewind(fp);
-	for (i = 0; i < MAX_LR; i++) //파일에서 받아오기 시작
+	for (int i = 0; i < MAX_UD; i++) //파일에서 받아오기 시작
 	{
-		for (j = 0; j < MAX_UD; j++)
+		for (int j = 0; j < MAX_LR; j++)
 		{
 			fscanf(fp, "%d", &map[i][j]);
 		}
 		fscanf(fp, "\n");
 	}
+	for (int i = 0; i < MAX_LR;i++)
 	system("cls");
 	setColor(yellow);
 	initSquare(start, "●");
 	gotoxy(start.x, start.y);
-	for (i = 0; i < MAX_UD; i++) //출력하기 시작
+	for (int i = 0; i < MAX_UD; i++) //출력하기 시작
 	{
-		for (j = 0; j < MAX_LR; j++)
+		for (int j = 0; j < MAX_LR; j++)
 		{
 			switch (map[i][j])
 			{
@@ -150,12 +163,17 @@ void readfile(FILE* fp) //파일을 읽으면서 게임 순서를 지정하고 실행한다.
 	FILE* ftest;
 	char ch[256];
 	char temp[128];
-	pos start = { 8, 6 };
 	pos talkp = { start.x + 2 * MAX_LR + 10, start.y - 4 };
 	//파일 읽고 돌리기 시작.
-
+	setColor(yellow);
+	gotoxy(start.x + MAX_LR, start.y - 3); printf("●게임 속도:");
+	gotoxy(start.x + 2 * MAX_LR - 1, start.y - 3); printf("%1d●",gameSpeed);
+	gotoxy(start.x + MAX_LR, start.y - 2); printf("●돈:");
+	gotoxy(start.x + 2 * MAX_LR - 14, start.y - 2); printf("%10u코인●",money);
 	config = fopen("config.txt", "rt");
-	level = fopen("level.txt", "at");//이미 game에서 만들었으므로 없을 리가 없다.
+	gotoxy(0, cmdrow - 2); system("pause");
+	makeroad();
+	level = fopen("levels.txt", "at");//이미 game에서 만들었으므로 없을 리가 없다.
 	if (config == NULL)
 	{
 		config = fopen("config.txt", "wt");
@@ -170,7 +188,7 @@ void readfile(FILE* fp) //파일을 읽으면서 게임 순서를 지정하고 실행한다.
 		case ';'://주석처리 ;
 			break;
 		case '\"'://비서가 하는 말. "
-			talk(talkp, ch + 1);
+			talk(talkp, ch + 1, 500);
 			break;
 		case 'O'://새로운 유닛을 연다. 이미 열려있으면 열지 않음.
 			break;
@@ -198,17 +216,28 @@ void readfile(FILE* fp) //파일을 읽으면서 게임 순서를 지정하고 실행한다.
 	fclose(config);
 	fclose(level);
 }
-
 void makeroad() //길파기. 파일에서 읽어온 배열을 사용하되 파일은 건들면 안된다.
 {//pos enemystart[5]을 이용한다. 초기화는 되어 있으니 그대로 쓰면 됨.
-	road r[5];
-	char ch[2] = {0};
-	int currentRoad = 0;
+	int ret = 0;
 	for (int i = 0; i < 5; i++)
 	{
-
+		if (enemystart[i].x != -1)
+		{
+			pt.x = enemystart[0].x;
+			pt.y = enemystart[0].y;
+			break;
+		}
 	}
-
+	char ch[2] = {0};
+	for (int i = 0; i < 5; i++)
+	{
+		road[i].here.x = enemystart[i].x;
+		road[i].here.y = enemystart[i].y;
+		road[i].next = NULL;
+		road[i].before = NULL;
+		roadEnd[i] = &road[i];
+	}
+	//길 파기
 	while (1)
 	{
 		ch[0] = _getch();
@@ -218,29 +247,183 @@ void makeroad() //길파기. 파일에서 읽어온 배열을 사용하되 파일은 건들면 안된다.
 			ch[0] = 0;
 			ch[1] = _getch();
 		}
-		if (ch[1] == UP || ch[0] == 'w' || ch[0] == 'W')
+		if (pt.y > 0 && ch[1] == UP || ch[0] == 'w' || ch[0] == 'W')//커서가 위로 움직일 수 있는 상황에서 UP키가 눌림.
 		{
-
+			clearCur(pt, map[pt.y][pt.x]); //전에 있던 커서를 지운다.
+			ret = updateRoad(UP);
 		}
-		else if(ch[1] == LEFT|| ch[0] == 'a' || ch[0] == 'a')
+		else if (pt.x > 0 && (ch[1] == LEFT || ch[0] == 'a' || ch[0] == 'a'))
 		{
-
+			clearCur(pt, map[pt.y][pt.x]);
+			ret = updateRoad(LEFT);
 		}
-		else if (ch[1] == RIGHT || ch[0] == 'd' || ch[0] == 'd')
+		else if (pt.x < MAX_LR && (ch[1] == RIGHT || ch[0] == 'd' || ch[0] == 'D'))
 		{
-
+			clearCur(pt, map[pt.y][pt.x]);
+			ret = updateRoad(RIGHT);
 		}
-		else if (ch[1] == DOWN || ch[0] == 's' || ch[0] == 's')
+		else if (pt.y < MAX_UD && (ch[1] == DOWN || ch[0] == 's' || ch[0] == 's'))
 		{
-
+			clearCur(pt, map[pt.y][pt.x]);
+			ret = updateRoad(DOWN);
 		}
-		else if (ch[0] == SPACE)
-		{
-
-		}
+		if (ret == 1)
+			break;
 	}
 }
 int startGame() //본 게임. 배열만 이용하고 파일은 건들지 않는다.반환값은 성의 남은 체력. 0이면 게임오버고 체력이 낮으면 별도 적은 방식.
 {
 	return 1;
+}
+
+void clearCur(pos pt, int block)
+{
+	gotoxy(start.x + 2 * pt.x, start.y + pt.y);
+	switch (block)
+	{
+	case EMPTY:
+		setColor(gray);
+		printf(". ");
+		break;
+	case ENEMYPOS:
+		setColor(bloody);
+		printf("◆");
+		break;
+	case ROAD:
+		setColor(yellow);
+		printf("▤");
+		break;
+	case INVALID:
+		setColor(bloody);
+		printf("IV");
+		break;
+	default:
+		setColor(bloody);
+		printf("??");
+		break;
+	}
+}
+
+int updateRoad(dir direction)
+{
+	if ((direction == UP && map[pt.y - 1][pt.x] == EMPTY)\
+		|| (direction == LEFT &&  map[pt.y][pt.x - 1] == EMPTY)\
+		||(direction == RIGHT &&  map[pt.y][pt.x + 1] == EMPTY)\
+		||(direction == DOWN &&  map[pt.y + 1][pt.x] == EMPTY))//새로 길을 만들 수 있다면
+	{
+		//새로 길을 만든다.
+		roadEnd[currentRoad]->next = (_road*)malloc(sizeof(road));
+		roadEnd[currentRoad]->next->before = roadEnd[currentRoad];
+		roadEnd[currentRoad] = roadEnd[currentRoad]->next;
+		if (direction == UP){
+			roadEnd[currentRoad]->before->direct = UP;
+			pt.y--;
+		}
+		else if (direction == LEFT){
+			roadEnd[currentRoad]->before->direct = LEFT;
+			pt.x--;
+		}
+		else if (direction == RIGHT){
+			roadEnd[currentRoad]->before->direct = RIGHT;
+			pt.x++;
+		}
+		else if (direction == DOWN) {
+			roadEnd[currentRoad]->before->direct = DOWN;
+			pt.y++;
+		}
+		gotoxy(start.x + 2 * pt.x, start.y + pt.y);
+		setColor(green);
+		printf("▤");
+		map[pt.y][pt.x] = ROAD;
+		roadEnd[currentRoad]->here.x = pt.x;
+		roadEnd[currentRoad]->here.y = pt.y;
+	}
+	else if ((direction == UP && map[pt.y - 1][pt.x] == ROAD && roadEnd[currentRoad]->before->direct == DOWN) || \
+		(direction == LEFT && map[pt.y][pt.x - 1] == ROAD&& roadEnd[currentRoad]->before->direct == RIGHT) || \
+		(direction == RIGHT && map[pt.y][pt.x + 1] == ROAD&& roadEnd[currentRoad]->before->direct == LEFT) || \
+		(direction == DOWN && map[pt.y + 1][pt.x] == ROAD&& roadEnd[currentRoad]->before->direct == UP))//돌아가려고 하는 경우에는
+		{//이전 블럭으로 간 경우에는 길을 지운다.
+			map[pt.y][pt.x] = EMPTY;
+			clearCur(pt, map[pt.y][pt.x]);
+			if(direction == UP)pt.y--;
+			if (direction == LEFT)pt.x--;
+			if (direction == RIGHT)pt.x++;
+			if (direction == DOWN)pt.y++;
+			gotoxy(start.x + 2 * pt.x, start.y + pt.y);
+			setColor(green);
+			printf("▤");
+			roadEnd[currentRoad] = roadEnd[currentRoad]->before;
+			free(roadEnd[currentRoad]->next);
+			roadEnd[currentRoad]->next = NULL;
+			roadEnd[currentRoad]->direct = NO;
+		//그 외의 경우에는 서로 다른 길이 겹치거나 하나의 길이 꼬이는 경우밖에 없으므로 아무것도 하지 않는다. 
+	}
+	else if ((direction == UP && map[pt.y - 1][pt.x] == ROAD)||
+		(direction == LEFT && map[pt.y][pt.x - 1] == ROAD) || \
+		(direction == RIGHT && map[pt.y][pt.x + 1] == ROAD) || \
+		(direction == DOWN && map[pt.y + 1][pt.x] == ROAD))//길이 겹치거나 꼬이는 경우
+	{
+		gotoxy(start.x + 2 * pt.x, start.y + pt.y);
+		setColor(green);
+		printf("▤");
+	}
+	else if ((direction == UP && map[pt.y - 1][pt.x] == CASTLE_DOOR)\
+		|| (direction == LEFT &&  map[pt.y][pt.x - 1] == CASTLE_DOOR)\
+		|| (direction == RIGHT &&  map[pt.y][pt.x + 1] == CASTLE_DOOR)\
+		|| (direction == DOWN &&  map[pt.y + 1][pt.x] == CASTLE_DOOR))
+	{
+		if (direction == UP)pt.y--;
+		if (direction == LEFT)pt.x--;
+		if (direction == RIGHT)pt.x++;
+		if (direction == DOWN)pt.y++;
+		roadEnd[currentRoad]->next = (_road*)malloc(sizeof(road));
+		roadEnd[currentRoad]->next->before = roadEnd[currentRoad];
+		roadEnd[currentRoad] = roadEnd[currentRoad]->next;
+		roadEnd[currentRoad]->next = NULL;
+		roadEnd[currentRoad]->here = pt;
+		if (direction == UP) {
+			roadEnd[currentRoad]->before->direct = UP;
+			pt.y--;
+		}
+		else if (direction == LEFT) {
+			roadEnd[currentRoad]->before->direct = LEFT;
+			pt.x--;
+		}
+		else if (direction == RIGHT) {
+			roadEnd[currentRoad]->before->direct = RIGHT;
+			pt.x++;
+		}
+		else if (direction == DOWN) {
+			roadEnd[currentRoad]->before->direct = DOWN;
+			pt.y++;
+		}
+		for (int i = 0;; i++)
+		{
+			if (i >= 5 || roadEnd[i]->here.x == -1)//모든 길을 이음.
+			{
+				Sleep(1000);
+				system("cls");
+				return 1;//완성 신호
+			}
+			else if (map[roadEnd[i]->here.y][roadEnd[i]->here.x] != CASTLE_DOOR) //완성되지 않은 길을 찾았다
+			{
+				currentRoad = i;
+				pt.x = road[currentRoad].here.x;
+				pt.y = road[currentRoad].here.y;
+				gotoxy(start.x + 2 * pt.x, start.y + pt.y);
+				setColor(green);
+				printf("▤");
+				break;
+			}
+
+		}
+	}
+	else
+	{
+		gotoxy(start.x + 2 * pt.x, start.y + pt.y);
+		setColor(green);
+		printf("▤");
+		return 0;
+	}
+	return 0;
 }
