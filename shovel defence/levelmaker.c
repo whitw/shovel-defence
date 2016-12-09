@@ -33,7 +33,6 @@ void initMapEdit()
 	gotoxy(2 * MAX_LR + 10, 27); printf("9: 모든 정보를 날려버립니다.");
 	gotoxy(2 * MAX_LR + 10, 29); printf("ENTER를 눌러서 완료할 수 있습니다.");//이 때 3, 4와 5이 있는지 체크한다.
 }
-
 int mapEdit(FILE* fp) //현재 wt로 열려있음. 닫을 필요는 없다.
 {
 	const pos start = { 2,4 }; //맵을 출력하기 시작하는 위치. 
@@ -322,7 +321,6 @@ BREAK_GET_KEY://ENTER로 편집모드를 나갔음.
 	}
 	return 1;
 }
-
 void waveEdit(FILE* fp)
 {
 	const pos start = { 2,4 }; //맵을 출력하기 시작하는 위치.  테두리 아님.
@@ -434,7 +432,6 @@ void waveEdit(FILE* fp)
 		fprintf(fp, "\n");
 	}
 }
-
 void sortMapFile()
 {
 	FILE* fp = NULL, *fptemp = NULL;
@@ -533,7 +530,6 @@ void sortMapFile()
 	}
 	fclose(fp);
 }
-
 void newMapFile()
 {
 	int num, temp = 0, temp2 = 0, temp3 = 0;

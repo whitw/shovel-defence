@@ -150,14 +150,6 @@ void printgame()
 	gotoxy(start.x + 2 * MAX_LR, start.y - 3); printf("¡Ü");
 	gotoxy(start.x + MAX_LR, start.y - 2); printf("¡Üµ·:");
 	gotoxy(start.x + 2 * MAX_LR - 4, start.y - 2); printf("ÄÚÀÎ¡Ü");
-	setColor(sky);
-	gotoxy(start.x + 2 * MAX_LR + 10, start.y + 4); printf("¡á¡á¡á¡á¡á¡á¡á");
-	for (int i = 0; i < 5; i++)
-	{
-		gotoxy(start.x + 2 * MAX_LR + 10, start.y + 5 + i); printf("¡á          ¡á");
-	}
-	gotoxy(start.x + 2 * MAX_LR + 10, start.y + 10); printf("¡á¡á¡á¡á¡á¡á¡á");
-	gotoxy(cmdcol / 4 * 3 - 9, start.y + 4); printf(">>              <<");
 	setColor(yellow);
 	gotoxy(start.x + 2 * MAX_LR + 2, cmdrow * 2 / 3); for (int i = 0; i < cmdcol / 4; i++)printf("¡Ü");
 	setColor(ivory);

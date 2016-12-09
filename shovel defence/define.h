@@ -1,5 +1,4 @@
 #pragma once
-
 #include <stdio.h>
 #include <conio.h>
 #include <stdlib.h>
@@ -16,41 +15,6 @@
 /****************typedef*************************/
 typedef enum { NOCURSOR, SOLIDCURSOR, NORMALCURSOR } CURSOR_TYPE;
 
-typedef enum color {
-	black, blue, green, sky, red, violet, yellow, ivory, gray, dblue, rime, aqua, bloody, \
-	lviolet, lyellow, white
-} color;
-typedef enum unitT {
-	uKid, uArchery, uCannon, uLaser,uWarrior,uSniper,uFarm,uTank
-}unitT;
-typedef enum enemyT {
-	eEmpty,eChicken,eThief,eRunner,ePirates,eBomb,eShield,eAirship,eTank,eKnight,eKing,eEnd = -1
-}enemyT;
-typedef struct pos
-{
-	int x;
-	int y;
-}pos;
-typedef struct unit
-{
-	unitT type;
-	int str;
-	int delay;
-	int rng;
-	int cost;
-	char* pic;
-	color color;
-	pos pos;
-}unit;
-typedef struct enemy
-{
-	enemyT type;
-	int hp;
-	int speed;
-	char* pic;
-	color color;
-}enemy;
-
 typedef enum dr {
 	UP = 72,
 	LEFT = 75,
@@ -58,14 +22,76 @@ typedef enum dr {
 	DOWN = 80,
 	NO = 0
 } dir;
+typedef enum color {
+	black, blue, green, sky, red, violet, yellow, ivory, gray, dblue, rime, aqua, bloody, \
+	lviolet, lyellow, white
+} color;
+typedef enum unitT {
+	uVillager,
+	uArchery,
+	uCannon,
+	uSniper,
+	uIce,
+	uLaser,
+	uFarm,
+	uWarrior,
+	uTank
+}unitT;
+typedef enum enemyT {
+	eEmpty,
+	eEnd = -1,
+	eChicken,
+	eThief,
+	eRunner,
+	ePirates,
+	eBomb,
+	eShield,
+	eAirship,
+	eTank,
+	eKnight,
+	eKing
+}enemyT;
+typedef struct pos
+{
+	int x;
+	int y;
+}pos;
+typedef struct enemy
+{
+	enemyT type;
+	int hp;
+	int speed;
+	int damage; //피해상수. hp * damage가 성에 데미지로 들어간다.
+	char* pic;
+	color color;
+	int isFrozen; //0이 아니면 얼려진 상태. 0이면 제대로 이동. frozen공격을 2i턴에 한번, i씩 먹이면 속도가 절반이 된다. 
+						 //!!!!이미 언 놈을 공격하면 절대 안된다.
+						 //자칫하면 무료하게 적들이 굳은 채 움직이지 않을 수 있음. 또는 얼음공격에 데미지를 주는 방식을 써도 되겠지만 이건 칸당 10명 룰을 넘길 것 같다. 
+	int money;
+}enemy;
 typedef struct rd
 {
 	pos here; // 블럭의 위치
-	dir direct; 
+	dir direct; //방향, 길을 만들 때 쓴다만 있을 필요가 있을지 고민중.
 	struct rd* before;//이전 길 블럭.
 	struct rd* next; //다음 길 블럭.
-	struct enemy* enemyStart; //여기가 적 배열의 시작지점. 동적할당을 사용한다.
+	struct enemy* enemyStart[10]; //여기가 적 배열의 시작지점. 설마 한칸에 10기 이상 들어가겠어<<<하지만 얼음이나 달리는 놈 때문에 들어갈 수 도 있다.<<<<수정 방법을 찾아야 한다.
+	int enemyIndex; //그 칸에 적이 몇 마리나 있는지를 저장한다. 적이 죽거나 빠져나가는 경우 0번에서부터 제거, 적이 들어오는 경우에는 enemyStart[enemyIndex]에 넣고 enemyIndex++하면 된다.
 }_road;
+typedef struct unit
+{
+	unitT type;
+	int upgrade;//1~3, 처음 만들 떄 1~ 최종단계 3. upgradeUnit()에 넣어서 업그레이드하자.
+	int str;
+	int delay;
+	int lastTick;//마지막으로 공격한 틱
+	int rng;
+	int cost;
+	char* pic;
+	color color;
+	pos pos;
+	struct rd* road[100];//공격 범위에 있는 길 목록. 이것도 나중에 링크드 리스트로 고쳐야 한다.
+}unit;
 
 /****************Define_Ascii********************/
 
