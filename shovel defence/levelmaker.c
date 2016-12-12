@@ -328,7 +328,7 @@ void waveEdit(FILE* fp)
 	int index = 0, indexTime = 0;
 	char ch;
 	setColor(gray);
-	for (int i = 0; i < 5;i++)
+	for (int i = 0; i < 5; i++)
 		enemyarr[i][0] = -1;
 	gotoxy(cmdcol / 3 - 2, 1); printf("웨이브 편집하기");
 	for (int i = 7; i < 35; i++)
@@ -354,10 +354,10 @@ void waveEdit(FILE* fp)
 	while (1)//아래쪽 테이프 처리 시작
 	{
 		setColor(gray);
-	gotoxy(2 * MAX_LR + 40, 37); printf("▼이곳 위치: %3d", indexTime);
+		gotoxy(2 * MAX_LR + 40, 37); printf("▼이곳 위치: %3d", indexTime);
 		gotoxy(2 * MAX_LR + 10, 38);
 		for (int i = -10; i < 10; i++)
-			printf("%02d ", enemyarr[index][(indexTime +1000 + i) % 1000]);
+			printf("%02d ", enemyarr[index][(indexTime + 1000 + i) % 1000]);
 		gotoxy(start.x + 2 * enemystart[index].x, start.y + enemystart[index].y); setColor(bloody); printf("■");
 		ch = _getch();
 		gotoxy(start.x + 2 * enemystart[index].x, start.y + enemystart[index].y); setColor(sky); printf("■");
@@ -368,18 +368,18 @@ void waveEdit(FILE* fp)
 			{
 			case UP:
 				index = (index + 4) % 5;
-				while(1)
-					if(enemystart[index].x == -1)
+				while (1)
+					if (enemystart[index].x == -1)
 						index = (index + 4) % 5;
 					else break;
-				break;
+					break;
 			case DOWN:
 				index = (index + 1) % 5;
 				while (1)
 					if (enemystart[index].x == -1)
-						index =(index + 1) % 5;
+						index = (index + 1) % 5;
 					else break;
-				break;
+					break;
 			case RIGHT:
 				indexTime = (indexTime + 1) % 1000;
 				break;
@@ -394,7 +394,7 @@ void waveEdit(FILE* fp)
 			{
 				break;
 			}
-			if(ch == 'q' || ch == 'Q')
+			if (ch == 'q' || ch == 'Q')
 				enemyarr[index][indexTime] = eEmpty;
 			if (ch == 'w' || ch == 'W')
 				enemyarr[index][indexTime] = eEnd;
@@ -414,7 +414,7 @@ void waveEdit(FILE* fp)
 				enemyarr[index][indexTime] = eAirship;
 			if (ch == 'c' || ch == 'C')
 				enemyarr[index][indexTime] = eTank;
-			if (ch == 'g' || ch == 'V')
+			if (ch == 'v' || ch == 'V')
 				enemyarr[index][indexTime] = eKnight;
 			if (ch == 'b' || ch == 'B')
 				enemyarr[index][indexTime] = eKing;
@@ -535,10 +535,12 @@ void newMapFile()
 	int num, temp = 0, temp2 = 0, temp3 = 0;
 	char string[15] = "", location[25] = "MAP\\";
 	char name[1000][15] = { "" };
+	char ch;
+	int rewritedFile = 0;
 	FILE* fp = NULL;
 	FILE* fptemp = NULL;
 	mkdir("MAP");
-	gotoxy(cmdcol / 2 - 15, cmdrow / 2); printf("새로 만들 레벨 이름을 입력해주십시오(최대 14자).");
+	gotoxy(cmdcol / 2 - 15, cmdrow / 2); printf("새로 만들 레벨 이름을 입력해주십시오(최대 14자), 띄우지 않고");
 	gotoxy(cmdcol / 2 - 15, cmdrow / 2 + 1); printf(">");
 	while (1)
 	{
@@ -557,10 +559,13 @@ void newMapFile()
 		if (fp != NULL)//이미 같은 이름의 파일이 있음.
 		{
 			gotoxy(cmdcol / 2 - 14, cmdrow / 2 + 1); printf("이미 같은 이름의 파일이 있습니다. 그래도 새로 만들까요?(원 파일이 지워집니다.)(Y/N)");
-			gotoxy(cmdcol / 2 - 14, cmdrow / 2 + 2); printf(">"); scanf("%d", &num);
-			if (num == 'Y' || num == 'y')
+			gotoxy(cmdcol / 2 - 14, cmdrow / 2 + 2); printf(">"); scanf("%c", &ch);
+			if (ch == 'Y' || ch == 'y')
 			{
+				gotoxy(cmdcol / 2 - 14, cmdrow / 2 + 3); printf("원 파일을 지웠습니다.");
 				fp = fopen(location, "wt");
+				Sleep(2000);
+				rewritedFile = 1;
 				break;
 			}
 			else
@@ -602,9 +607,12 @@ void newMapFile()
 		system("cls");
 		setColor(gray);
 		fclose(fp);
-		fp = fopen("levels.txt", "at");
-		fprintf(fp, "%s 0\n", string);
-		fclose(fp);
+		if (!rewritedFile)
+		{
+			fp = fopen("levels.txt", "at");
+			fprintf(fp, "%s 0\n", string);
+			fclose(fp);
+		}
 		system("cls");
 		gotoxy(cmdcol / 2 - 23, cmdrow / 2); printf("%s에 저장되었습니다. 레벨 선택 화면 마지막에 배치됩니다.", location);
 		Sleep(500);

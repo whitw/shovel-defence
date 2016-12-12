@@ -1,6 +1,6 @@
 #include "define.h"
 #pragma warning (disable:4996)
-int keyType = 0;
+keyT keyType = 0; //현재 키 선택.
 char keyNormal[8][2] = { {'q',0} ,{ 'w',0 },{ 'e',0 },{ 'r',0 },{ 'a',0 },{ 's',0 },{ 'd',0 },{ 'f',0 } };
 char keyShort[2][2] = { {'a',0},{'d',0} };
 char keyCommon[6][2] = { { SPACE,0 },{ ESC,0 },{ -32,UP },{ -32,LEFT },{ -32,RIGHT },{ -32,DOWN } };
@@ -182,11 +182,11 @@ void option()
 void talk(pos start,char* str, int time)
 {
 	setColor(gray);
-	gotoxy(start.x, start.y); printf("┌─┐");
-	gotoxy(start.x, start.y + 1); printf("┴─┴");
+	gotoxy(start.x + 1, start.y); printf("┌─┐");
+	gotoxy(start.x + 1, start.y + 1); printf("┴─┴");
 	gotoxy(start.x - 1, start.y + 2); printf("(○_.._◑)");
 	setColor(white);
-	gotoxy(start.x + 10, start.y + 2); printf("{%s)", str);
+	gotoxy(start.x + 10, start.y + 2); printf("{ %s )", str);
 	Sleep(time);
 }
 

@@ -14,7 +14,10 @@
 #define MAX_LR 30 //왼쪽 오른쪽 길이
 /****************typedef*************************/
 typedef enum { NOCURSOR, SOLIDCURSOR, NORMALCURSOR } CURSOR_TYPE;
-
+typedef enum keyT {
+	normalKey,
+	shortenKey
+} keyT;
 typedef enum dr {
 	UP = 72,
 	LEFT = 75,
@@ -39,7 +42,6 @@ typedef enum unitT {
 }unitT;
 typedef enum enemyT {
 	eEmpty,
-	eEnd = -1,
 	eChicken,
 	eThief,
 	eRunner,
@@ -49,7 +51,8 @@ typedef enum enemyT {
 	eAirship,
 	eTank,
 	eKnight,
-	eKing
+	eKing,
+	eEnd = -1
 }enemyT;
 typedef struct pos
 {
@@ -62,7 +65,7 @@ typedef struct enemy
 	int hp;
 	int speed;
 	int damage; //피해상수. hp * damage가 성에 데미지로 들어간다.
-	char* pic;
+	char pic[3];
 	color color;
 	int isFrozen; //0이 아니면 얼려진 상태. 0이면 제대로 이동. frozen공격을 2i턴에 한번, i씩 먹이면 속도가 절반이 된다. 
 						 //!!!!이미 언 놈을 공격하면 절대 안된다.
@@ -87,7 +90,7 @@ typedef struct unit
 	int lastTick;//마지막으로 공격한 틱
 	int rng;
 	int cost;
-	char* pic;
+	char pic[3];
 	color color;
 	pos pos;
 	struct rd* road[100];//공격 범위에 있는 길 목록. 이것도 나중에 링크드 리스트로 고쳐야 한다.
@@ -108,6 +111,7 @@ typedef struct unit
 #define CASTLE_INV 5 //성 주변의 무효한 부분.
 #define INVALID 6 //맵 바깥.
 #define ROAD 10 //길.
+#define UNIT 29 //유닛. 숫자 29는 그냥 갑자기 땡겨서 넣음
 /*****************Define_function*****************/
 #define ColorInit() GetStdHandle(STD_OUTPUT_HANDLE)
 #define setColor(x) SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), x)
