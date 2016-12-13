@@ -44,7 +44,7 @@ void levelmaker()
 	}
 	else if (num == 3) //파일 편집
 	{
-
+		editMapFile();
 	}
 	//그 이외의 경우에는 숫자에 상관 없이 나가기
 }

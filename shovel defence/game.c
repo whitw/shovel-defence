@@ -227,7 +227,8 @@ int startGame() //본 게임. 배열만 이용하고 파일은 건들지 않는다.반환값은 성의 남
 	while (1)
 	{
 		/***************이쪽에서는 한 틱당 한번만 하면 되는 것들을 담당합니다********************/
-
+		gotoxy(start.x, start.y - 2);
+		printf("%d", currentTick);
 		eraseEnemyGraphic();
 		attackCastle();
 		moveEnemy();
@@ -547,6 +548,24 @@ int updateRoad(dir direction)
 		map[pt.y][pt.x] = ROAD;
 		roadEnd[currentRoad]->here.x = pt.x;
 		roadEnd[currentRoad]->here.y = pt.y;
+	}
+	else if ((direction == UP && map[pt.y - 1][pt.x] == ENEMYPOS && roadEnd[currentRoad]->before->direct == DOWN) || \
+		(direction == LEFT && map[pt.y][pt.x - 1] == ENEMYPOS&& roadEnd[currentRoad]->before->direct == RIGHT) || \
+		(direction == RIGHT && map[pt.y][pt.x + 1] == ENEMYPOS&& roadEnd[currentRoad]->before->direct == LEFT) || \
+		(direction == DOWN && map[pt.y + 1][pt.x] == ENEMYPOS&& roadEnd[currentRoad]->before->direct == UP))//돌아가려고 하는 경우에는
+	{//이전 블럭으로 간 경우에는 길을 지운다.
+		map[pt.y][pt.x] = EMPTY;
+		clearCur(pt, map[pt.y][pt.x]);
+		if (direction == UP)pt.y--;
+		if (direction == LEFT)pt.x--;
+		if (direction == RIGHT)pt.x++;
+		if (direction == DOWN)pt.y++;
+		showSelectedRoad();
+		roadEnd[currentRoad] = roadEnd[currentRoad]->before;
+		free(roadEnd[currentRoad]->next);
+		roadEnd[currentRoad]->next = NULL;
+		roadEnd[currentRoad]->direct = NO;
+		//그 외의 경우에는 서로 다른 길이 겹치거나 하나의 길이 꼬이는 경우밖에 없으므로 아무것도 하지 않는다. 
 	}
 	else if ((direction == UP && map[pt.y - 1][pt.x] == ROAD && roadEnd[currentRoad]->before->direct == DOWN) || \
 		(direction == LEFT && map[pt.y][pt.x - 1] == ROAD&& roadEnd[currentRoad]->before->direct == RIGHT) || \
