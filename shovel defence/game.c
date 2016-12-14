@@ -5,19 +5,20 @@
 #pragma warning(disable:4477)
 color colorRoad[5] = { green, bloody, aqua , sky, lviolet };
 //extern : Key
-extern char keyNormal[8][2]; // qwerasdf
-extern char keyShort[2][2]; // a d
-extern char keyCommon[6][2]; // w a s d select escape
-extern char keySpeed[2][2];// speedUp speedDown
+extern int keyNormal[9][2]; // qwertasdf
+extern int keyShort[2][2]; // a d
+extern int keyCommon[6][2]; // w a s d select escape
+extern int keySpeed[5][2];// speedUp speedDown
 extern keyT keyType; 
 //Road
-
+unit unitArr[900];//ㅜㅜ
+int currentUnit; //현재 유닛의 갯수.
 pos start = { 8, 6 };
 pos castleMid = { -1,-1 };
 _road road[5];
 _road* roadEnd[5]; //현재 작업중인 길의 끝지점을 저장함.
 int currentRoad = 0; //지금 선택하고 있는 길
-
+int openedUnit[9] = {1 , 0}; //열린 유닛들을 받아온다.
 					 //MAP & config
 
 int map[MAX_UD][MAX_LR];//받아온 파일은 여기에 복사하고, 여기에다 플레이시 변하는 것들을 담는다. 파일 내용은 건드리지 않는다.
@@ -25,37 +26,31 @@ pos enemystart[5];
 pos pt = { 0,0 };
 enemyT enemyarr[5][1000]; //
 int money, healthMax, currentHealth;
-int tick[4] = { 1000, 500,250,125 };
-int gameSpeed = 1;
-int openedUnit[10] = {1,0};
+int tick[5] = { 2000, 1000, 500, 250,125 };
+int gameSpeed = 2;
 
 void game()
 {
 	FILE* fp;
-	char filename[25], string[15];
+	char filename[25], string[20];
 	int select;
 	//level select
 	select = printlevel();
 	if (select == -1)
 		return;
-	fp = fopen("config.txt", "rt"); //키 입력 가져오기 시작
+	//키 설정 가져오기 끝
+	fp = fopen("units.txt", "rt"); //열려있는 유닛 종류 가져오기 시작
 	if (fp == NULL)
 	{
-		fp = fopen("config.txt", "wt");
-		fprintf(fp, "113 0\n119 0\n101 0\n114 0\n97 0 \n115 0\n100 0\n102 0\n97 0\n100 0\n-32 72\n-32 75\n-32 77\n-32 80\n32 0\n27 0\n0 49\n0 50\n0 51\n");//초기 상태로 복구.
+		fp = fopen("units.txt", "wt");
+		fprintf(fp, "1 0 0 0 0 0 0 0 0 ");
 		fclose(fp);
-		fp = fopen("config.txt", "rt");
+		fp = fopen("units.txt", "rt");
 	}
-		for (int i = 0; i < 8; i++)
-			fscanf(fp, "%d %d\n", &keyNormal[i][0], &keyNormal[i][1]);
-		for (int i = 0; i < 2;i++)
-			fscanf(fp, "%d %d\n", &keyShort[i][0], &keyShort[i][1]);
-		for (int i = 0; i < 6;i++)
-			fscanf(fp, "%d %d\n", &keyCommon[i][0], &keyCommon[i][1]);
-		for (int i = 0; i < 3; i++)
-			fscanf(fp, "%d %d\n", &keySpeed[i][0], &keySpeed[i][1]);
-		fclose(fp);
-	//키 설정 가져오기 끝
+	for (int i = 0; i < 9; i++)
+	{
+		fscanf(fp, "%d", &openedUnit[i]);
+	}
 	fp = fopen("levels.txt", "rt");//파일 이름 가져오기 시작
 	if (fp == NULL)
 	{
@@ -119,70 +114,96 @@ void printmap(FILE* fp)
 }
 void readfile(FILE* fp) //파일을 읽으면서 게임 순서를 지정하고 실행한다.
 {
-	FILE* config;
-	FILE* level;
+	FILE* units = fopen("units.txt", "rt");
+	FILE* config = fopen("config.txt", "rt");;
+	FILE* level = fopen("levels.txt", "at");//이미 game에서 만들었으므로 없을 리가 없다.;
 	FILE* ftest;
 	char ch[256];
 	char temp[128];
+	int willBegin = 0;
+	int star = 0;
+	int tempd = 0;
 	pos talkp = { start.x + 2 * MAX_LR + 10, start.y - 4 };
-	config = fopen("config.txt", "rt");
 	//파일 읽고 돌리기 시작.
-																																															if (makeroad()){
-																																																startGame();
-																																															}
-	level = fopen("levels.txt", "at");//이미 game에서 만들었으므로 없을 리가 없다.
+	if (units == NULL)
+	{
+		units = fopen("units.txt", "wt");
+		fprintf(units, "1 0 0 0 0 0 0 0 0");
+		fclose(units);
+		units = fopen("units.txt", "rt");
+	}
+	for (int i = 0; i < 9; i++)
+		fscanf(units, "%d", &openedUnit[i]);
 	if (config == NULL)
 	{
 		config = fopen("config.txt", "wt");
 		fclose(config);
 		config = fopen("config.txt", "rt");
 	}
+	if (makeroad())
+		startGame();
 	while (feof(fp) != 0)//파일을 다 읽을 때 까지
 	{
-		fgets(ch, 256, fp);//한 줄 씩 읽은 뒤 맨 앞글자를 읽어서
+		fscanf(fp, "%d", &ch[0]);
 		switch (ch[0])
 		{
 		case ';'://주석처리 ;
+			fscanf(fp, "%*[^\n]");
 			break;
 		case '\"'://비서가 하는 말. "
-			talk(talkp, ch + 1, 500);
+			fscanf(fp, "%[^\n]", ch);
+			talk(talkp, ch, 500);
 			break;
 		case 'O'://새로운 유닛을 연다. 이미 열려있으면 열지 않음.
+			fscanf(fp, "%d", &temp);
+			if(tempd < 10 && tempd >= 0)
+				openedUnit[tempd] = 1;
+			for (int i = 0; i < 9; i++)
+				fprintf(units,"%d ",openedUnit[i]);
 			break;
 		case 'L'://새로운 레벨을 연다. 단순히 levels.txt에 추가하면 되는 식.
+			fscanf(fp, "%s", ch);
 			strcmp(temp, "MAP\\");
-			strcat(temp, ch + 2);
+			strcat(temp, ch);
 			strcat(temp, ".level");
 			ftest = fopen(temp, "rt");
-			if (ftest == NULL)
+			if (ftest != NULL)
 			{
 				fprintf(level, "%s 0\n", ch + 2);
 				fclose(ftest);
 			}
 		case 'r'://길 파기
-			makeroad();
+			willBegin = makeroad();
 			break;
 		case 's'://게임 시작
-			startGame();
+			if(willBegin)
+				startGame();
 			break;
 		case 'e'://게임 끝. 별 갯수를 계산하고 레벨에 저장해야 한다.
-			
+			if (0.9 * healthMax <= currentHealth)//체력이 90% 이상이면: cur/max>=0.9
+				star = 3;
+			if (0.5 * healthMax <= currentHealth)//체력이 50% 이상이면
+				star = 2;
+			if (currentHealth > 0)//체력이 50% 이하이면
+				star = 1;
+			else star = 0;//클리어하지 못했으면
 			break;
 		}
 	}
 	fclose(config);
 	fclose(level);
 }
-int startGame() //본 게임. 배열만 이용하고 파일은 건들지 않는다.반환값은 성의 남은 체력. 0이면 게임오버고 체력이 낮으면 별도 적은 방식. 반환값은 어차피 상관 없을테니까 남은 체력으로 할까>>전역이라 쓸모 없는데
+int startGame() //본 게임. 배열만 이용하고 파일은 건들지 않는다.반환값은 성의 남은 체력. 0이면 게임오버고 체력이 낮으면 별도 적은 방식. 
 {
-	char ch[2] = { 0 };
+	int ch[2] = { 0 };
 	time_t t1, t2; //게임 속도 조절에 사용한다.
 	int currentTick = 0; //현재까지 지난 틱. 0부터 시작해서 999에서 1000으로 바뀔 때 끝.
 	int isArrEnd[5] = { 0 };//지금 출력해야 하는 적 배열. 귀찮게 5개를 쓰는 이유는 이미 -1이 나온 배열에서는 읽어서는 안되기 때문.
 	int beforeMoney = money; //이전 상태의 돈 상태. 둘이 다를 때만 출력하자.
 	int beforeGameSpeed = gameSpeed;
 	int isUnitSelected = 0; //유닛이 선택된 상태. 선택되었을 때와 되어있지 않을 때의 오른쪽 레이아웃이 살짝 다르고 ESC키 동작도 다르다.
-	int ifUSelect = 0; //유닛이 선택되어 있는 경우에만 씀. 
+	int unitPos = 0; //현재 스페이스를 눌러서 설치할 수 있는 있는 유닛.
+	int temp = 0;
 	t1 = clock();
 	setColor(yellow);
 	gotoxy(cmdcol / 3, cmdrow / 3 + 0); printf("▩▩▩▩▩");
@@ -211,19 +232,15 @@ int startGame() //본 게임. 배열만 이용하고 파일은 건들지 않는다.반환값은 성의 남
 	gotoxy(start.x, start.y);
 	printArrMap();
 	showHealthBar(currentHealth, healthMax);
-	setColor(sky);
-	gotoxy(start.x + 2 * MAX_LR + 10, start.y + 4); printf("■■■■■■■");
-	for (int i = 0; i < 5; i++){
-		gotoxy(start.x + 2 * MAX_LR + 10, start.y + 5 + i); printf("■          ■");
-	}
-	gotoxy(start.x + 2 * MAX_LR + 10, start.y + 10); printf("■■■■■■■");
-	gotoxy(cmdcol / 4 * 3 - 9, start.y + 4); printf(">>              <<");
 	setColor(yellow);
 	gotoxy(start.x + MAX_LR, start.y - 3); printf("●게임 속도:");
 	gotoxy(start.x + 2 * MAX_LR - 1, start.y - 3); printf("%1d●", gameSpeed + 1);
 	gotoxy(start.x + MAX_LR, start.y - 2); printf("●돈:");
 	gotoxy(start.x + 2 * MAX_LR - 14, start.y - 2); printf("%10u코인●", money);
 	pt = castleMid;
+	gotoxy(start.x + 2 * pt.x, start.y + pt.y);
+	setColor(sky);
+	printf("▣");
 	while (1)
 	{
 		/***************이쪽에서는 한 틱당 한번만 하면 되는 것들을 담당합니다********************/
@@ -236,16 +253,17 @@ int startGame() //본 게임. 배열만 이용하고 파일은 건들지 않는다.반환값은 성의 남
 		for (int i = 0; i < 5; i++)
 			if (road[i].here.x != -1 && road[i].enemyIndex < 10 && !isArrEnd[i])
 			{
-				if (enemyarr[i][currentTick] != eEnd)
+				if (enemyarr[i][currentTick] != eEnd && enemyarr[i][currentTick] != eEmpty)
 				{
 					road[i].enemyStart[road[i].enemyIndex] = (enemy*)malloc(sizeof(enemy));
 					initEnemy((road[i].enemyStart[road[i].enemyIndex]), enemyarr[i][currentTick]);
 					road[i].enemyIndex++;
 				}
-				else isArrEnd[i] = 1;
+				else if(enemyarr[i][currentTick] == eEnd)
+					isArrEnd[i] = 1;
 			}
 		drawEnemy();
-		attackEnemy();
+		attackEnemy(currentTick);
 		currentTick++;
 		if (currentTick >= 1000 || currentTick < 0 || currentHealth <= 0)
 			return currentHealth;
@@ -260,12 +278,12 @@ int startGame() //본 게임. 배열만 이용하고 파일은 건들지 않는다.반환값은 성의 남
 				if (_kbhit())
 					ch[1] = _getch();
 
-				//방향키
-					//포인터 지우기
-					//포인터 이동
-					//포인터 표시
-				if (isUnitSelected) //유닛을 선택하고 있는 경우에는 ESC랑 방향키 Space말고는 쓸 일이 없다.
+				if (isUnitSelected) //유닛을 선택하고 있는 경우에는 ESC랑 방향키, Space말고는 쓸 일이 없다.
 				{
+					//오른쪽에 파란 네모를 업데이트하고
+
+					//그 아래에 왼쪽: 업그레이드, 오른쪽: 제거 딱 두개만 두면 될듯
+
 
 				}
 				else //선택된 유닛이 없는 경우
@@ -274,7 +292,7 @@ int startGame() //본 게임. 배열만 이용하고 파일은 건들지 않는다.반환값은 성의 남
 					{
 						if (map[pt.y][pt.x] == CASTLE || map[pt.y][pt.x] == CASTLE_INV)
 							drawCastle();
-						else clearCur(pt, map[pt.y][pt.x]);
+						else clearCurEnemy(pt, map[pt.y][pt.x]);
 						if (pt.y > 0 && map[pt.y - 1][pt.x] != INVALID)
 							pt.y--;
 						gotoxy(start.x + 2 * pt.x, start.y + pt.y);
@@ -285,7 +303,7 @@ int startGame() //본 게임. 배열만 이용하고 파일은 건들지 않는다.반환값은 성의 남
 					{
 						if (map[pt.y][pt.x] == CASTLE || map[pt.y][pt.x] == CASTLE_INV)
 							drawCastle();
-						else clearCur(pt, map[pt.y][pt.x]);
+						else clearCurEnemy(pt, map[pt.y][pt.x]);
 						if (pt.x > 0 && map[pt.y][pt.x - 1] != INVALID)
 							pt.x--;
 						gotoxy(start.x + 2 * pt.x, start.y + pt.y);
@@ -296,7 +314,7 @@ int startGame() //본 게임. 배열만 이용하고 파일은 건들지 않는다.반환값은 성의 남
 					{
 						if (map[pt.y][pt.x] == CASTLE || map[pt.y][pt.x] == CASTLE_INV)
 							drawCastle();
-						else clearCur(pt, map[pt.y][pt.x]);
+						else clearCurEnemy(pt, map[pt.y][pt.x]);
 						if (pt.x < MAX_LR - 1 && map[pt.y][pt.x + 1] != INVALID)
 							pt.x++;
 						gotoxy(start.x + 2 * pt.x, start.y + pt.y);
@@ -307,7 +325,7 @@ int startGame() //본 게임. 배열만 이용하고 파일은 건들지 않는다.반환값은 성의 남
 					{
 						if (map[pt.y][pt.x] == CASTLE || map[pt.y][pt.x] == CASTLE_INV)
 							drawCastle();
-						else clearCur(pt, map[pt.y][pt.x]);
+						else clearCurEnemy(pt, map[pt.y][pt.x]);
 						if (pt.y < MAX_UD - 1 && map[pt.y + 1][pt.x] != INVALID)
 							pt.y++;
 						gotoxy(start.x + 2 * pt.x, start.y + pt.y);
@@ -317,7 +335,59 @@ int startGame() //본 게임. 배열만 이용하고 파일은 건들지 않는다.반환값은 성의 남
 					else if (ch[0] == keyCommon[4][0] && ch[1] == keyCommon[4][1])//Select
 					{
 						if (map[pt.y][pt.x] == UNIT)
+						{
+							for (int i = 0; i < 900; i++)
+							{
+								if (unitArr[i].pos.x == pt.x && unitArr[i].pos.y == pt.y)
+								{
+									switch (unitArr[i].type)
+									{
+									case uVillager:
+										gotoxy(start.x + 2 * MAX_LR + 12, start.y + 5); printf(" >>시민<< ");
+										gotoxy(start.x + 2 * MAX_LR + 5, start.y + 9); printf("공격방식: 약하지만 싸다");
+										break;
+									case uArchery:
+										gotoxy(start.x + 2 * MAX_LR + 12, start.y + 5); printf(" >>궁수<< ");
+										gotoxy(start.x + 2 * MAX_LR + 5, start.y + 9); printf("공격방식: 시민보다는 세다");
+										break;
+									case uCannon:
+										gotoxy(start.x + 2 * MAX_LR + 12, start.y + 5); printf(" >>포병<< ");
+										gotoxy(start.x + 2 * MAX_LR + 5, start.y + 9); printf("공격방식:무난하다");
+										break;
+									case uSniper:
+										gotoxy(start.x + 2 * MAX_LR + 12, start.y + 5); printf(">>저격수<<");
+										gotoxy(start.x + 2 * MAX_LR + 5, start.y + 9); printf("공격방식:아무나 하나를 강하게!");
+										break;
+									case uIce:
+										gotoxy(start.x + 2 * MAX_LR + 12, start.y + 5); printf(">얼음법사<");
+										gotoxy(start.x + 2 * MAX_LR + 5, start.y + 9); printf("공격방식: 이 주변을 얼릴 거예요.");
+										break;
+									case uLaser:
+										gotoxy(start.x + 2 * MAX_LR + 12, start.y + 5); printf(">>레이저<<");
+										gotoxy(start.x + 2 * MAX_LR + 5, start.y + 9); printf("공격방식:직선 위를 한번에 정리");
+										break;
+									case uFarm:
+										gotoxy(start.x + 2 * MAX_LR + 12, start.y + 5); printf(" >>농장<< ");
+										gotoxy(start.x + 2 * MAX_LR + 5, start.y + 9); printf("농사방식:맛있는 식단을 위해");
+										break;
+									case uWarrior:
+										gotoxy(start.x + 2 * MAX_LR + 12, start.y + 5); printf(" >>전사<< ");
+										gotoxy(start.x + 2 * MAX_LR + 5, start.y + 9); printf("공격방식:주변에 강하게 공격");
+										break;
+									case uTank:
+										gotoxy(start.x + 2 * MAX_LR + 12, start.y + 5); printf(" >>전차<< ");
+										gotoxy(start.x + 2 * MAX_LR + 5, start.y + 9); printf("공격방식: 무작위한 한 점 주변을 공격");
+										break;
+									}
+									gotoxy(start.x + 2 * MAX_LR + 12, start.y + 6); printf("공격력:%d", unitArr[i].str);
+									gotoxy(start.x + 2 * MAX_LR + 12, start.y + 7); printf("사거리:%d", unitArr[i].rng);
+									gotoxy(start.x + 2 * MAX_LR + 12, start.y + 8); printf("공격딜레이:%d", unitArr[i].delay);
+								}
+							}
+							//오른쪽 파란 네모를 유지하고
+							//현재 유닛을 선택한 유닛으로 넣어준다.
 							isUnitSelected = 1;
+						}
 						//이 외의 경우에는 굳이 해야 하는게 없다.
 					}
 					else if (ch[0] == keyCommon[5][0] && ch[1] == keyCommon[5][1])//exit
@@ -330,31 +400,67 @@ int startGame() //본 게임. 배열만 이용하고 파일은 건들지 않는다.반환값은 성의 남
 							if (_kbhit())
 								break;
 						}
+						gotoxy(start.x, start.y - 3);
+						printf("\t\t\t\t\t");
+
 						showHealthBar(currentHealth,healthMax);
 					}
 					if (keyType == normalKey)
 					{
+						for (int i = 0; i < 8; i++)
+							if (ch[0] == keyNormal[i][0] && ch[1] == keyNormal[i][1])
+							{
+								//그 위치가 비어있다면
+								if (map[pt.y][pt.x] == EMPTY)
+								{
+									//유닛을 새로 설치한다.
+									initUnit(&unitArr[currentUnit], (unitT)i, pt, currentTick);
+									currentUnit++;
+									map[pt.y][pt.x] = UNIT;
+									for (int i = 0; i < 5; i++)
+									{
+										roadEnd[i] = &(road[i]);
+										while (roadEnd[i]->next != NULL)
+											roadEnd[i] = roadEnd[i]->next;
+									}
+									//유닛의 공격 범위를 정해서 넣어준다.
+								}
+								for (int i = 0; i < 5; i++)
+									while (roadEnd[i]->before != NULL)
+									{
+										if ((roadEnd[i]->here.x - pt.x, roadEnd[i]->here.y - pt.y) < unitArr[currentUnit].rng)
+											unitArr[currentUnit].road[temp++] = roadEnd[i];
+										roadEnd[i] = roadEnd[i]->before;
+									}
+							}
 					}
 					else //shortenKey
 					{
+						if (ch[0] == keyShort[0][0] && ch[1] == keyShort[0][1])
+						{
 
+						}
+						if (ch[1] == keyShort[1][0] && ch[1] == keyShort[1][1])
+						{
+
+						}
 					}
-					//키 종류에 따라
-					//qwerasdf
-					//ad--아군 출현.
-					//파란 사각형에 블럭 종류 표시
+					beforeGameSpeed = gameSpeed;
+					for (int i = 0; i < 5;i++)
+						if (ch[0] == keySpeed[i][0] && ch[1] == keySpeed[i][1])
+							gameSpeed = i;
 				}
 			}
 			setColor(yellow);
 			if (beforeGameSpeed != gameSpeed)
 			{
-				gotoxy(start.x + MAX_LR, start.y - 3); printf("●게임 속도:");
 				gotoxy(start.x + 2 * MAX_LR - 1, start.y - 3); printf("%1d●", gameSpeed + 1);
+				beforeGameSpeed = gameSpeed;
 			}
 			if (money != beforeMoney)
 			{
-				gotoxy(start.x + MAX_LR, start.y - 2); printf("●돈:");
 				gotoxy(start.x + 2 * MAX_LR - 14, start.y - 2); printf("%10u코인●", money);
+				beforeMoney = money;
 			}
 			t2 = clock();
 		} while (t2 - t1 < tick[gameSpeed]);
@@ -371,7 +477,7 @@ void showSelectedRoad()
 int makeroad() //길파기. 파일에서 읽어온 배열을 사용하되 파일은 건들면 안된다. 반환값은 성공적으로 끝내지 못했으면 0
 {//pos enemystart[5]을 이용한다. 초기화는 되어 있으니 그대로 쓰면 됨.
 	int ret = 0;
-	char ch[2] = { 0 };
+	int ch[2] = { 0 };
 	for (int i = 0; i < 5; i++)
 	{
 		if (enemystart[i].x != -1)
@@ -400,14 +506,13 @@ int makeroad() //길파기. 파일에서 읽어온 배열을 사용하되 파일은 건들면 안된다. �
 		ch[1] = 0;
 		if (_kbhit())
 		{
-			ch[0] = 0;
 			ch[1] = _getch();
 		}
-		if (ch[0] == ESC && ch[1] == 0)
+		if (ch[0] == keyCommon[5][0] && ch[1] == keyCommon[5][1]) //esc
 		{
 			gotoxy((int)(cmdcol * 0.6 - 10), cmdrow / 2 - 10);
 			setColor(gray);
-			printf("시작 화면으로 돌아갑니다. 정말로 끝낼까요?(ENTER를 눌러서 확인)");
+			printf("시작 화면으로 돌아갑니다. 정말로 끝낼까요?");
 			ch[0] = _getch();
 			ch[1] = 0;
 			if (_kbhit())
@@ -415,7 +520,7 @@ int makeroad() //길파기. 파일에서 읽어온 배열을 사용하되 파일은 건들면 안된다. �
 				ch[0] = 0;
 				ch[1] = _getch();
 			}
-			if (ch[0] == ENTER && ch[1] == 0)
+			if (ch[0] == keyCommon[4][0] && ch[1] == keyCommon[4][1])
 			{
 				for (int i = 0; i < 5; i++)//길을 초기화.
 				{
@@ -436,7 +541,7 @@ int makeroad() //길파기. 파일에서 읽어온 배열을 사용하되 파일은 건들면 안된다. �
 				return 0;
 			}
 		}
-		if (ch[0] == SPACE && ch[1] == 0)
+		if (ch[0] == keyCommon[4][0] && ch[1] == keyCommon[4][1])
 		{
 			do {
 				currentRoad = (currentRoad + 1) % 5;
@@ -445,22 +550,22 @@ int makeroad() //길파기. 파일에서 읽어온 배열을 사용하되 파일은 건들면 안된다. �
 			pt = roadEnd[currentRoad]->here; 
 			showSelectedRoad();
 		}
-		if (pt.y > 0 && ch[1] == UP || ch[0] == 'w' || ch[0] == 'W')//커서가 위로 움직일 수 있는 상황에서 UP키가 눌림.
+		if (pt.y > 0 && ch[0] == keyCommon[0][0] && ch[1] == keyCommon[0][1])//커서가 위로 움직일 수 있는 상황에서 UP키가 눌림.
 		{
 			clearCur(pt, map[pt.y][pt.x]); //전에 있던 커서를 지운다.
 			ret = updateRoad(UP);
 		}
-		else if (pt.x > 0 && (ch[1] == LEFT || ch[0] == 'a' || ch[0] == 'a'))
+		else if (pt.x > 0 && ch[0] == keyCommon[1][0] && ch[1] == keyCommon[1][1])
 		{
 			clearCur(pt, map[pt.y][pt.x]);
 			ret = updateRoad(LEFT);
 		}
-		else if (pt.x < MAX_LR - 1 && (ch[1] == RIGHT || ch[0] == 'd' || ch[0] == 'D'))
+		else if (pt.x < MAX_LR - 1 && ch[0] == keyCommon[2][0] && ch[1] == keyCommon[2][1])
 		{
 			clearCur(pt, map[pt.y][pt.x]);
 			ret = updateRoad(RIGHT);
 		}
-		else if (pt.y < MAX_UD - 1 && (ch[1] == DOWN || ch[0] == 's' || ch[0] == 's'))
+		else if (pt.y < MAX_UD - 1 && ch[0] == keyCommon[3][0] && ch[1] == keyCommon[3][1])
 		{
 			clearCur(pt, map[pt.y][pt.x]);
 			ret = updateRoad(DOWN);
@@ -506,6 +611,79 @@ void clearCur(pos pt, int block)
 	case INVALID:
 		setColor(bloody);
 		printf("IV");
+		break;
+	default:
+		setColor(bloody);
+		printf("??");
+		break;
+	}
+}
+void clearCurEnemy(pos pt, int block)
+{
+	_road* roadEndTemp;
+	int end = 0;
+	gotoxy(start.x + 2 * pt.x, start.y + pt.y);
+	switch (block)
+	{
+	case EMPTY:
+		setColor(gray);
+		printf(". ");
+		break;
+	case STONE:
+		setColor(gray);
+		printf("■");
+		break;
+	case ENEMYPOS:
+		setColor(bloody);
+		printf("◆");
+		break;
+	case CASTLE_DOOR:
+		setColor(yellow);
+		printf("▤");
+		break;
+	case ROAD:
+		for (int i = 0; i < 5; i++)
+		{
+			if (road[i].here.x == -1)
+				continue;
+			roadEndTemp = &(road[i]);
+			while (roadEndTemp != NULL)
+			{
+				if (pt.x == roadEndTemp->here.x && pt.y == roadEndTemp->here.y)
+				{
+					if (roadEndTemp->enemyIndex != 0)
+					{
+						setColor(roadEndTemp->enemyStart[0]->color);
+						printf("%s", roadEndTemp->enemyStart[0]->pic);
+					}
+					else
+					{
+						setColor(yellow);
+						printf("▤");
+					}
+					end = 1;
+					break;
+				}
+				else roadEndTemp = roadEndTemp->next;
+			}
+			if (end == 1)
+				break;
+		}
+		break;
+	case INVALID:
+		setColor(bloody);
+		printf("IV");
+		break;
+	case UNIT:
+		for (int i = 0; i <= currentUnit; i++)
+		{
+			if (pt.x == unitArr[i].pos.x && pt.y == unitArr[i].pos.y)
+			{
+				setColor(unitArr[i].color);
+				printf("%s", unitArr[i].pic);
+				break;
+			}
+		}
 		break;
 	default:
 		setColor(bloody);
@@ -703,17 +881,15 @@ void printArrMap()
 }
 void initEnemy(enemy* ep, enemyT type)
 {
-	ep->type = type;
-	ep->isFrozen = 0;
-	ep->speed = 1; //한 턴마다 한 번 이동
+	if (type != eEmpty)
+	{
+		ep->type = type;
+		ep->isFrozen = 0;
+		ep->speed = 1; //한 턴마다 한 번 이동
+	}
 	switch (type)
 	{
 	case eEmpty:
-		ep->damage = 0;
-		ep->hp = 0;
-		ep->money = 0;
-		strcpy(ep->pic, "  ");
-		ep->color = red;
 		break;
 	case eChicken:
 		ep->damage = 1;//피해상수
@@ -741,8 +917,8 @@ void initEnemy(enemy* ep, enemyT type)
 		ep->damage = 2;
 		ep->hp = 50;
 		ep->money = 5;
-		strcpy(ep->pic, "% ");
-		ep->color = blue;
+		strcpy(ep->pic, "%%");
+		ep->color = sky;
 		break;
 	case eBomb:
 		ep->damage = 20;
@@ -790,10 +966,59 @@ void initEnemy(enemy* ep, enemyT type)
 }
 void initUnit(unit* u, unitT type, pos position, int currentTick)
 {
+	switch (type)
+	{
+	case uVillager:
+		if (money > 10)
+			money -= 10;
+		else return;
+		break;
+	case uArchery:
+		if (money > 15)
+			money -= 15;
+		else return;
+		break;
+	case uCannon:
+		if (money >= 15)
+			money -= 15;
+		else return;
+		break;
+	case uSniper:
+		if (money >= 100)
+			money -= 100;
+		else return;
+		break;
+	case uIce:
+		if (money >= 50)
+			money -= 50;
+		else return;
+		break;
+	case uLaser:
+		if (money >= 70)
+			money -= 70;
+		else return;
+		break;
+	case uFarm:
+		if (money >= 150)
+			money -= 150;
+		else return;
+		break;
+	case uWarrior:
+		if (money >= 30)
+			money -= 30;
+		else return;
+		break;
+	case uTank:
+		if (money > 200)
+			money -= 200;
+		else return;
+		break;
+	}
 	u->type = type;
 	u->upgrade = 1;
 	u->pos = position;
 	u->lastTick = currentTick;
+	
 	switch (type)
 	{
 	case uVillager:
@@ -845,7 +1070,7 @@ void initUnit(unit* u, unitT type, pos position, int currentTick)
 		u->color = bloody;
 		break;
 	case uFarm:
-		u->str = 0;
+		u->str = 2;
 		u->delay = 1;
 		u->rng = 0;
 		u->cost = 100;
@@ -872,8 +1097,256 @@ void initUnit(unit* u, unitT type, pos position, int currentTick)
 }
 void upgradeUnit(unit *u)
 {
-	if (u->upgrade < 3)
-		u->upgrade++;
+	if (u->upgrade = 1)
+	{
+		switch (u->type)
+		{
+		case uVillager:
+			if (money > 10)
+				money -= 10;
+			else return;
+			break;
+		case uArchery:
+			if (money > 15)
+				money -= 15;
+			else return;
+			break;
+		case uCannon:
+			if (money >= 15)
+				money -= 15;
+			else return;
+			break;
+		case uSniper:
+			if (money >= 100)
+				money -= 100;
+			else return;
+			break;
+		case uIce:
+			if (money >= 50)
+				money -= 50;
+			else return;
+			break;
+		case uLaser:
+			if (money >= 70)
+				money -= 70;
+			else return;
+			break;
+		case uFarm:
+			if (money >= 150)
+				money -= 150;
+			else return;
+			break;
+		case uWarrior:
+			if (money >= 30)
+				money -= 30;
+			else return;
+			break;
+		case uTank:
+			if (money > 200)
+				money -= 200;
+			else return;
+			break;
+		}
+		switch (u->type)
+		{
+		case uVillager:
+			u->str = 3;
+			u->delay = 1;
+			u->rng = 3;
+			u->cost = 10;
+			break;
+		case uArchery:
+			u->str = 5;
+			u->delay = 2;
+			u->rng = 6;
+			u->cost = 15;
+			strcpy(u->pic, ">>");
+			u->color = yellow;
+			break;
+		case uCannon:
+			u->str = 10;
+			u->delay = 2;
+			u->rng = 4;
+			u->cost = 15;
+			strcpy(u->pic, "ㄸ");
+			u->color = gray;
+			break;
+		case uSniper:
+			u->str = 35;
+			u->delay = 5;
+			u->rng = 17;
+			u->cost = 100;
+			strcpy(u->pic, "▣");
+			u->color = violet;
+			break;
+		case uIce:
+			u->str = 1;
+			u->delay = 2;
+			u->rng = 5;
+			u->cost = 50;
+			strcpy(u->pic, "※");
+			u->color = sky;
+			break;
+		case uLaser:
+			u->str = 3;
+			u->delay = 2;
+			u->rng = 12;
+			u->cost = 70;
+			strcpy(u->pic, "=");
+			u->color = bloody;
+			break;
+		case uFarm:
+			u->str = 5;
+			u->delay = 1;
+			u->rng = 0;
+			u->cost = 150;
+			strcpy(u->pic, "▤");
+			u->color = green;
+			break;
+		case uWarrior:
+			u->str = 20;
+			u->delay = 2;
+			u->rng = 1;
+			u->cost = 30;
+			strcpy(u->pic, "｜ ");
+			u->color = white;
+			break;
+		case uTank:
+			u->str = 15;
+			u->delay = 10;
+			u->rng = 7;
+			u->cost = 200;
+			strcpy(u->pic, "⊇");
+			u->color = ivory;
+			break;
+		}
+	}
+	if (u->upgrade == 2)
+	{
+		switch (u->type)
+		{
+		case uVillager:
+			if (money > 20)
+				money -= 20;
+			else return;
+			break;
+		case uArchery:
+			if (money > 15)
+				money -= 15;
+			else return;
+			break;
+		case uCannon:
+			if (money >= 15)
+				money -= 15;
+			else return;
+			break;
+		case uSniper:
+			if (money >= 100)
+				money -= 100;
+			else return;
+			break;
+		case uIce:
+			if (money >= 50)
+				money -= 50;
+			else return;
+			break;
+		case uLaser:
+			if (money >= 70)
+				money -= 70;
+			else return;
+			break;
+		case uFarm:
+			if (money >= 200)
+				money -= 200;
+			else return;
+			break;
+		case uWarrior:
+			if (money >= 50)
+				money -= 50;
+			else return;
+			break;
+		case uTank:
+			if (money > 200)
+				money -= 200;
+			else return;
+			break;
+		}
+		switch (u->type)
+		{
+		case uVillager:
+			u->str = 5;
+			u->delay = 1;
+			u->rng = 3;
+			u->cost = 20;
+			strcpy(u->pic, "ㅆ");
+			u->color = ivory;
+			break;
+		case uArchery:
+			u->str = 10;
+			u->delay = 2;
+			u->rng = 8;
+			u->cost = 15;
+			strcpy(u->pic, "}}");
+			u->color = yellow;
+			break;
+		case uCannon:
+			u->str = 12;
+			u->delay = 2;
+			u->rng = 6;
+			u->cost = 15;
+			strcpy(u->pic, "ㅌ");
+			u->color = gray;
+			break;
+		case uSniper:
+			u->str = 40;
+			u->delay = 4;
+			u->rng = 18;
+			u->cost = 100;
+			strcpy(u->pic, "◈");
+			u->color = violet;
+			break;
+		case uIce:
+			u->str = 2;
+			u->delay = 1;
+			u->rng = 7;
+			u->cost = 50;
+			strcpy(u->pic, "♣");
+			u->color = sky;
+			break;
+		case uLaser:
+			u->str = 4;
+			u->delay = 2;
+			u->rng = 12;
+			u->cost = 70;
+			strcpy(u->pic, "≡");
+			u->color = bloody;
+			break;
+		case uFarm:
+			u->str = 10;
+			u->delay = 1;
+			u->rng = 0;
+			u->cost = 200;
+			strcpy(u->pic, "▤");
+			u->color = green;
+			break;
+		case uWarrior:
+			u->str = 30;
+			u->delay = 2;
+			u->rng = 1;
+			u->cost = 50;
+			strcpy(u->pic, "†");
+			u->color = white;
+			break;
+		case uTank:
+			u->str = 25;
+			u->delay = 10;
+			u->rng = 7;
+			u->cost = 200;
+			strcpy(u->pic, "⊇");
+			u->color = ivory;
+			break;
+		}
+	}
 }
 void drawCastle()
 {
@@ -933,7 +1406,7 @@ void moveEnemy()
 					{
 						if (roadEnd[i]->before->enemyStart[j]->type == eRunner) //적 타입이 eRunner
 						{
-							if (roadEnd[i]->next != NULL && roadEnd[i]->next->enemyIndex < 10)//앞 배열에 자리가 남는 경우
+							if (roadEnd[i]->next != NULL && roadEnd[i]->next->enemyIndex < 10)//2칸 앞의 배열에 자리가 남는 경우
 							{
 								roadEnd[i]->next->enemyStart[roadEnd[i]->enemyIndex] = roadEnd[i]->before->enemyStart[j]; //그 블럭만 떼어서 앞쪽으로 옮기고
 								roadEnd[i]->next->enemyIndex++;
@@ -946,7 +1419,7 @@ void moveEnemy()
 							else if (roadEnd[i]->next != NULL);//앞 배열에 자리가 없는 경우 옮기지 않는다.
 							else//앞 배열이 NULL: 끝지점일 경우
 							{
-								currentHealth -= roadEnd[i]->enemyStart[j]->hp * roadEnd[i]->enemyStart[j]->damage;
+								currentHealth -= roadEnd[i]->before->enemyStart[j]->hp * roadEnd[i]->before->enemyStart[j]->damage;
 								showHealthBar(currentHealth, healthMax);
 								roadEnd[i]->before->enemyStart[j] = NULL; //그 블럭만 떼어서 앞쪽으로 옮기고
 								for (int k = j; k < roadEnd[i]->enemyIndex - 1; k++)//뒤쪽에 있는 애들은 한칸씩 앞으로 당긴다.
@@ -1007,8 +1480,78 @@ void drawEnemy()
 	}
 
 }
-void attackEnemy()
+void attackEnemy(int currentTick)
 {
 	//유닛이 적을 공격
+	for (int i = 0; i < currentUnit; i++)
+	{
+		switch (unitArr[i].type)
+		{
+		case uVillager:
+		case uArchery:
+		case uCannon:
+		case uSniper:
+			for (int j = 0; j < 100; j++)
+			{
+				if (currentTick - unitArr[i].lastTick > unitArr[i].delay && unitArr[i].road[j] != NULL && unitArr[i].road[j]->enemyIndex != 0)
+				{
+				gotoxy(start.x + 2 * unitArr[i].road[j]->here.x, start.y + unitArr[i].road[j]->here.y);
+				setColor(bloody);
+				printf("%s", unitArr[i].road[j]->enemyStart[0]->pic);
+					unitArr[i].road[j]->enemyStart[0]->hp -= unitArr[i].str;
+					if (unitArr[i].road[j]->enemyStart[0]->hp < 0)
+					{
+						money += unitArr[i].road[j]->enemyStart[0]->money;
+						for (int k = 0; k < unitArr[i].road[j]->enemyIndex - 1; i++)
+							unitArr[i].road[j]->enemyStart[k] = unitArr[i].road[j]->enemyStart[k + 1];
+						free(unitArr[i].road[j]->enemyStart[unitArr[i].road[j]->enemyIndex-1]);
+						unitArr[i].road[j]->enemyIndex--;
+					}
+					unitArr[i].lastTick = currentTick;
+					break;
+				}
+			}
+			break;
+		case uIce:
+			for (int j = 0; j < 100; j++)
+			{
+				if (currentTick - unitArr[i].lastTick > unitArr[i].delay && unitArr[i].road[j] != NULL && unitArr[i].road[j]->enemyIndex != 0)//시간이 되고 길은 유효하며 적이 있을 때
+				{
+					gotoxy(start.x + 2 * unitArr[i].road[j]->here.x, start.y + unitArr[i].road[j]->here.y);
+					setColor(sky);
+					printf("%s", unitArr[i].road[j]->enemyStart[0]->pic);
+					unitArr[i].road[j]->enemyStart[0]->hp -= unitArr[i].str;
+					if (unitArr[i].road[j]->enemyStart[0]->hp < 0)
+					{
+						money += unitArr[i].road[j]->enemyStart[0]->money;
+						for (int k = 0; k < unitArr[i].road[j]->enemyIndex - 1; i++)
+							unitArr[i].road[j]->enemyStart[k] = unitArr[i].road[j]->enemyStart[k + 1];
+						free(unitArr[i].road[j]->enemyStart[unitArr[i].road[j]->enemyIndex - 1]);
+						unitArr[i].road[j]->enemyIndex--;
+					}
+					if(unitArr[i].road[j]->enemyStart[0]->isFrozen == 0)
+						unitArr[i].road[j]->enemyStart[0]->isFrozen = 1;
+					unitArr[i].lastTick = currentTick;
+				break;
+				}
+			}
+			break;
+		case uLaser:
+			break;
+		case uFarm:
+			if (currentTick - unitArr[i].lastTick > unitArr[i].delay)
+				money += unitArr[i].str;
+			if (currentTick % 2)
+				setColor(rime);
+			else setColor(unitArr[i].color);
+			gotoxy(start.x + 2 * unitArr[i].pos.x, start.y + unitArr[i].pos.y);
+			printf("%s", unitArr[i].pic);
+			break;
+		case uWarrior:
 
+			break;
+		case uTank:
+			break;
+		}
+	}
 }

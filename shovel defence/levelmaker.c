@@ -2,8 +2,10 @@
 #include "levelmaker.h"
 #pragma warning(disable:4996)
 
-pos enemystart[5]; //레이드가 시작되는 지점, 최대 4개
+pos enemystart[5]; //레이드가 시작되는 지점, 최대 5개
 char location[25] = "MAP\\";
+orderT order[70] = { 0 };
+char string[70][100];
 
 void initMapEdit()
 {
@@ -436,7 +438,7 @@ void sortMapFile()
 {
 	FILE* fp = NULL, *fptemp = NULL;
 	int num, temp = 0, temp2 = 0, temp3 = 0;
-	char string[15] = "", location[25] = "MAP\\";
+	char string[20] = "", location[25] = "MAP\\";
 	char name[1000][15] = { "" };
 	int score[1000];
 	fp = fopen("levels.txt", "rt");
@@ -533,7 +535,7 @@ void sortMapFile()
 void newMapFile()
 {
 	int num, temp = 0, temp2 = 0, temp3 = 0;
-	char string[15] = "", location[25] = "MAP\\";
+	char string[20] = "", location[25] = "MAP\\";
 	char name[1000][15] = { "" };
 	char ch;
 	int rewritedFile = 0;
@@ -602,8 +604,7 @@ void newMapFile()
 		scanf("%d", &num);
 		fprintf(fp, "%d\n", num);
 		//이벤트 편집 장면
-		//
-
+		fileEdit(fp);
 		system("cls");
 		setColor(gray);
 		fclose(fp);
@@ -618,14 +619,12 @@ void newMapFile()
 		Sleep(500);
 	}
 }
-
 void editMapFile()
 {
 
 	int num, temp = 0, temp2 = 0, temp3 = 0;
-	char string[15] = "";
+	char string[20] = "";
 	enemyT wave[5][1000] = {0};
-	char ch;
 	FILE* fp = NULL;
 	mkdir("MAP");
 	gotoxy(cmdcol / 2 - 15, cmdrow / 2); printf("편집할 레벨 이름을 입력해주십시오(최대 14자, 공백 없이)");
@@ -637,23 +636,19 @@ void editMapFile()
 		if (strlen(string) > 14)//이름이 너무 김.
 		{
 			gotoxy(cmdcol / 2 - 14, cmdrow / 2 + 1); printf("이름이 너무 깁니다. 다시 시도해주세요.");
-			strcpy(location, "MAP\\");
 			Sleep(1000);
 			continue;
 		}
+		strcpy(location, "MAP\\");
 		strcat(location, string);
 		strcat(location, ".level");
 		fp = fopen(location, "rt");
-		if (fp != NULL)//파일을 연다.
-		{
-			fp = fopen(location, "rt");
-			break;
-		}
-		else //같은 이름을 가진 파일이 없음.
+		if (fp == NULL)
 		{
 			gotoxy(cmdcol / 2 - 14, cmdrow / 2 + 1); printf("그런 이름을 가진 파일이 없습니다.");
 			Sleep(1000);
 		}
+		else break;
 	}
 	//맵 편집화면
 	if (editMapEdit(fp,wave))
@@ -674,7 +669,7 @@ void editMapFile()
 		scanf("%d", &num);
 		fprintf(fp, "%d\n", num);
 		//이벤트 편집 장면
-		//
+		editFileEdit(fp);
 
 		system("cls");
 		setColor(gray);
@@ -759,6 +754,23 @@ int editMapEdit(FILE* fp, enemyT (*enemyarr)[1000])
 			{
 				break;
 			}
+		}
+	}
+	fscanf(fp, "%*d %*d");//숫자 제거
+	for (int i = 0; i < 70; i++)
+	{
+		fscanf(fp, "%d", &order[i]);
+		if (order[i] == memo || order[i] == orderTalk || order[i] == openLevel) //문자열이 필요한 명령어
+		{
+			fscanf(fp, "%s\n", string[i]);
+		}
+		else if (order[i] == openUnit)//숫자가 필요한 명령어
+		{
+			fscanf(fp, "%d\n", &string[i][0]);
+		}
+		else//다른 명령이 필요 없는 명령어
+		{
+			fscanf(fp, "0\n");
 		}
 	}
 	while (1) //지우기-> 포인터 옮기기-> 그리기를 반복.
@@ -1134,5 +1146,482 @@ void editWaveEdit(FILE* fp, enemyT (*enemyarr)[1000])
 				break;
 		}
 		fprintf(fp, "\n");
+	}
+}
+void fileEdit(FILE* fp)//게임 순서를 지정하는 파일을 만듬.
+{
+	int ch = 0;
+	int cur = 0;
+	orderT order[70] = {0};
+	char string[70][100];
+	system("cls");
+	gotoxy(cmdcol / 9 - 5, 2); printf("┌───────┐");
+	gotoxy(cmdcol / 9 - 5, 3); printf("│게임 순서 지정│");
+	gotoxy(cmdcol / 9 - 5, 4); printf("└───────┘");
+	for (int i = 0; i < cmdrow; i++)
+	{
+		gotoxy(cmdcol / 3, i); printf("│");
+		gotoxy(cmdcol / 3 * 2, i); printf("│");
+	}
+	gotoxy(cmdcol * 2 / 3 + 4, cmdrow / 7); printf("이제 마지막 단계입니다!");
+	gotoxy(cmdcol * 2 / 3 + 4, cmdrow / 7 + 2); printf("게임을 실행할 순서를 정해주세요");
+	gotoxy(cmdcol * 2 / 3 + 4, cmdrow / 7 + 4); printf("반드시 길 만들기→");
+	gotoxy(cmdcol * 2 / 3 + 4, cmdrow / 7 + 6); printf("게임 실행하기→");
+	gotoxy(cmdcol * 2 / 3 + 4, cmdrow / 7 + 8); printf("클리어 했을 때 명령→");
+	gotoxy(cmdcol * 2 / 3 + 4, cmdrow / 7 + 10); printf("끝 순서를 지켜주세요.");
+	gotoxy(cmdcol * 2 / 3 + 4, cmdrow / 7 + 12); printf("위 아래 방향키로 커서를 움직일 수 있습니다.");
+	setColor(rime);
+	gotoxy(cmdcol * 2 / 3 + 4, cmdrow / 7 + 14); printf("1: 현재 위치에 메모하기");
+	gotoxy(cmdcol * 2 / 3 + 4, cmdrow / 7 + 16); printf("2:플레이어에게 말하기");
+	gotoxy(cmdcol * 2 / 3 + 4, cmdrow / 7 + 18); printf("3:길 파기(하나만)");
+	gotoxy(cmdcol * 2 / 3 + 4, cmdrow / 7 + 20); printf("4: 게임 시작");
+	gotoxy(cmdcol * 2 / 3 + 4, cmdrow / 7 + 22); printf("5: 클리어하면 여기서부터");
+	gotoxy(cmdcol * 2 / 3 + 4, cmdrow / 7 + 24); printf("6: 실패하면 여기서부터");
+	gotoxy(cmdcol * 2 / 3 + 4, cmdrow / 7 + 26); printf("7: 새로운 유닛 열기");
+	gotoxy(cmdcol * 2 / 3 + 4, cmdrow / 7 + 28); printf("8: 레벨 열기");
+	gotoxy(cmdcol * 2 / 3 + 4, cmdrow / 7 + 30); printf("9: 끝");
+	setColor(sky);
+	for (int i = 0; i < 70; i++)
+	{
+		gotoxy(cmdcol / 3 * (i/ 35) + 3, i % 35 + 5); printf("%d", i);
+	}
+	gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+	setColor(rime);
+	printf("▶");
+	while (1)
+	{
+		ch = _getch();
+		if (_kbhit())
+		{
+			ch = _getch();
+			if (ch == UP || ch == DOWN)
+			{
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				printf("  ");
+			}
+
+			if (ch == UP)
+				cur = (cur + 69) % 70;
+			else if (ch == DOWN)
+				cur = (cur + 1) % 70;
+			gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+			setColor(rime);
+			printf("▶");
+		}
+		else
+		{
+			if (ch == '1')
+			{
+				order[cur] = memo;
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf("\t\t\t\t\t");
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf("메모:");
+				gotoxy(cmdcol / 3 * (cur / 35) + 15, cur % 35 + 5);
+				gets(string[cur]);
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				printf("  ");
+				cur = (cur + 1) % 70;
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				setColor(rime);
+				printf("▶");
+			}
+			if (ch == '2')
+			{
+				order[cur] = orderTalk;
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf("\t\t\t\t\t");
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf("말하기:");
+				gotoxy(cmdcol / 3 * (cur / 35) + 17, cur % 35 + 5); 
+				gets(string[cur]);
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				printf("  ");
+				cur = (cur + 1) % 70;
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				setColor(rime);
+				printf("▶");
+			}
+			if (ch == '3')
+			{
+				order[cur] = mkroad;
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf("\t\t\t\t\t");
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf(">>길파기");
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				printf("  ");
+				cur = (cur + 1) % 70;
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				setColor(rime);
+				printf("▶");
+			}
+			if (ch == '4')
+			{
+				order[cur] = gamestart;
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf("\t\t\t\t\t");
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf(">>게임 시작");
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				printf("  ");
+				cur = (cur + 1) % 70;
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				setColor(rime);
+				printf("▶");
+			}
+			if (ch == '5')
+			{
+				order[cur] = clear;
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf("\t\t\t\t\t");
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf(">>클리어하면 여기서부터");
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				printf("  ");
+				cur = (cur + 1) % 70;
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				setColor(rime);
+				printf("▶");
+			}
+			if (ch == '6')
+			{
+				order[cur] = fail;
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf("\t\t\t\t\t");
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf(">>실패하면 여기서부터");
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				printf("  ");
+				cur = (cur + 1) % 70;
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				setColor(rime);
+				printf("▶");
+			}
+			if (ch == '7')
+			{
+				order[cur] = openUnit;
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf("\t\t\t\t\t");
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf(">>유닛 언락:  번");
+				gotoxy(cmdcol / 3 * (cur / 35) + 22, cur % 35 + 5);
+				scanf("%d", &string[cur][0]);
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				printf("  ");
+				cur = (cur + 1) % 70;
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				setColor(rime);
+				printf("▶");
+			}
+			if (ch == '8')
+			{
+				order[cur] = openLevel;
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf("\t\t\t\t\t");
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf(">>레벨 언락:");
+				gets(string[cur]);
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				printf("  ");
+				cur = (cur + 1) % 70;
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				setColor(rime);
+				printf("▶");
+			}
+			if (ch == '9')
+			{
+				order[cur] = endRead;
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf("\t\t\t\t\t");
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf(">>읽기 끝");
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				printf("  ");
+				cur = (cur + 1) % 70;
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				setColor(rime);
+				printf("▶");
+			}
+			if (ch == ENTER)
+				break;
+		}
+	}
+	for (int i = 0; i < 70;i++)
+	{
+		if (order[i] == memo || order[i] == orderTalk || order[i] == openLevel) //문자열이 필요한 명령어
+		{
+			fprintf(fp,"%d %s\n", order[i], string[i]);
+		}
+		else if (order[i] == openUnit)//숫자가 필요한 명령어
+		{
+			fprintf(fp, "%d %d\n", order[i], string[i][0]);
+		}
+		else//다른 명령이 필요 없는 명령어, 아무것도 쓰이지 않는 0도 포함.
+		{
+			fprintf(fp, "%d 0\n", order[i]);
+		}
+	}
+}
+void editFileEdit(FILE* fp)
+{
+	int ch = 0;
+	int cur = 0;
+	system("cls");
+	gotoxy(cmdcol / 9 - 5, 2); printf("┌───────┐");
+	gotoxy(cmdcol / 9 - 5, 3); printf("│게임 순서 지정│");
+	gotoxy(cmdcol / 9 - 5, 4); printf("└───────┘");
+	for (int i = 0; i < cmdrow; i++)
+	{
+		gotoxy(cmdcol / 3, i); printf("│");
+		gotoxy(cmdcol / 3 * 2, i); printf("│");
+	}
+	gotoxy(cmdcol * 2 / 3 + 4, cmdrow / 7); printf("이제 마지막 단계입니다!");
+	gotoxy(cmdcol * 2 / 3 + 4, cmdrow / 7 + 2); printf("게임을 실행할 순서를 정해주세요");
+	gotoxy(cmdcol * 2 / 3 + 4, cmdrow / 7 + 4); printf("반드시 길 만들기→");
+	gotoxy(cmdcol * 2 / 3 + 4, cmdrow / 7 + 6); printf("게임 실행하기→");
+	gotoxy(cmdcol * 2 / 3 + 4, cmdrow / 7 + 8); printf("클리어 했을 때 명령→");
+	gotoxy(cmdcol * 2 / 3 + 4, cmdrow / 7 + 10); printf("끝 순서를 지켜주세요.");
+	gotoxy(cmdcol * 2 / 3 + 4, cmdrow / 7 + 12); printf("위 아래 방향키로 커서를 움직일 수 있습니다.");
+	setColor(rime);
+	gotoxy(cmdcol * 2 / 3 + 4, cmdrow / 7 + 14); printf("1: 현재 위치에 메모하기");
+	gotoxy(cmdcol * 2 / 3 + 4, cmdrow / 7 + 16); printf("2:플레이어에게 말하기");
+	gotoxy(cmdcol * 2 / 3 + 4, cmdrow / 7 + 18); printf("3:길 파기(하나만)");
+	gotoxy(cmdcol * 2 / 3 + 4, cmdrow / 7 + 20); printf("4: 게임 시작");
+	gotoxy(cmdcol * 2 / 3 + 4, cmdrow / 7 + 22); printf("5: 클리어하면 여기서부터");
+	gotoxy(cmdcol * 2 / 3 + 4, cmdrow / 7 + 24); printf("6: 실패하면 여기서부터");
+	gotoxy(cmdcol * 2 / 3 + 4, cmdrow / 7 + 26); printf("7: 새로운 유닛 열기");
+	gotoxy(cmdcol * 2 / 3 + 4, cmdrow / 7 + 28); printf("8: 레벨 열기");
+	gotoxy(cmdcol * 2 / 3 + 4, cmdrow / 7 + 30); printf("9: 끝");
+	setColor(sky);
+	for (int i = 0; i < 70; i++)
+	{
+		gotoxy(cmdcol / 3 * (i / 35) + 3, i % 35 + 5); printf("%d", i);
+		if (order[i] == '1')
+		{
+			gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+			printf("메모:");
+			printf("%s", string[i]);
+		}
+		if (ch == '2')
+		{
+			gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+			printf("말하기:");
+			printf("%s", string[i]);
+		}
+		if (ch == '3')
+		{
+			gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+			printf(">>길파기");
+		}
+		if (ch == '4')
+		{
+			gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+			printf(">>게임 시작");
+		}
+		if (ch == '5')
+		{
+			gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+			printf(">>클리어하면 여기서부터");
+		}
+		if (ch == '6')
+		{
+			gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+			printf(">>실패하면 여기서부터");
+		}
+		if (ch == '7')
+		{
+			gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+			printf(">>유닛 언락:  %d번", string[i][0]);
+		}
+		if (ch == '8')
+		{
+			gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+			printf(">>레벨 언락:");
+			printf("%s", string[i]);
+		}
+		if (ch == '9')
+		{
+			gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+			printf(">>읽기 끝");
+		}
+		gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+	}
+	gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+	setColor(rime);
+	printf("▶");
+	while (1)
+	{
+		ch = _getch();
+		if (_kbhit())
+		{
+			ch = _getch();
+			if (ch == UP || ch == DOWN)
+			{
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				printf("  ");
+			}
+
+			if (ch == UP)
+				cur = (cur + 69) % 70;
+			else if (ch == DOWN)
+				cur = (cur + 1) % 70;
+			gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+			setColor(rime);
+			printf("▶");
+		}
+		else
+		{
+			if (ch == '1')
+			{
+				order[cur] = memo;
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf("\t\t\t\t\t");
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf("메모:");
+				gotoxy(cmdcol / 3 * (cur / 35) + 15, cur % 35 + 5);
+				gets(string[cur]);
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				printf("  ");
+				cur = (cur + 1) % 70;
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				setColor(rime);
+				printf("▶");
+			}
+			if (ch == '2')
+			{
+				order[cur] = orderTalk;
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf("\t\t\t\t\t");
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf("말하기:");
+				gotoxy(cmdcol / 3 * (cur / 35) + 17, cur % 35 + 5);
+				gets(string[cur]);
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				printf("  ");
+				cur = (cur + 1) % 70;
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				setColor(rime);
+				printf("▶");
+			}
+			if (ch == '3')
+			{
+				order[cur] = mkroad;
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf("\t\t\t\t\t");
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf(">>길파기");
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				printf("  ");
+				cur = (cur + 1) % 70;
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				setColor(rime);
+				printf("▶");
+			}
+			if (ch == '4')
+			{
+				order[cur] = gamestart;
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf("\t\t\t\t\t");
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf(">>게임 시작");
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				printf("  ");
+				cur = (cur + 1) % 70;
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				setColor(rime);
+				printf("▶");
+			}
+			if (ch == '5')
+			{
+				order[cur] = clear;
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf("\t\t\t\t\t");
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf(">>클리어하면 여기서부터");
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				printf("  ");
+				cur = (cur + 1) % 70;
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				setColor(rime);
+				printf("▶");
+			}
+			if (ch == '6')
+			{
+				order[cur] = fail;
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf("\t\t\t\t\t");
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf(">>실패하면 여기서부터");
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				printf("  ");
+				cur = (cur + 1) % 70;
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				setColor(rime);
+				printf("▶");
+			}
+			if (ch == '7')
+			{
+				order[cur] = openUnit;
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf("\t\t\t\t\t");
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf(">>유닛 언락:  번");
+				gotoxy(cmdcol / 3 * (cur / 35) + 22, cur % 35 + 5);
+				scanf("%d", &string[cur][0]);
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				printf("  ");
+				cur = (cur + 1) % 70;
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				setColor(rime);
+				printf("▶");
+			}
+			if (ch == '8')
+			{
+				order[cur] = openLevel;
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf("\t\t\t\t\t");
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf(">>레벨 언락:");
+				gets(string[cur]);
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				printf("  ");
+				cur = (cur + 1) % 70;
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				setColor(rime);
+				printf("▶");
+			}
+			if (ch == '9')
+			{
+				order[cur] = endRead;
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf("\t\t\t\t\t");
+				gotoxy(cmdcol / 3 * (cur / 35) + 10, cur % 35 + 5);
+				printf(">>읽기 끝");
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				printf("  ");
+				cur = (cur + 1) % 70;
+				gotoxy(cmdcol / 3 * (cur / 35) + 5, cur % 35 + 5);
+				setColor(rime);
+				printf("▶");
+			}
+			if (ch == ENTER)
+				break;
+		}
+	}
+	for (int i = 0; i < 70; i++)
+	{
+		if (order[i] == memo || order[i] == orderTalk || order[i] == openLevel) //문자열이 필요한 명령어
+		{
+			fprintf(fp, "%d %s\n", order[i], string[i]);
+		}
+		else if (order[i] == openUnit)//숫자가 필요한 명령어
+		{
+			fprintf(fp, "%d %d\n", order[i], string[i][0]);
+		}
+		else//다른 명령이 필요 없는 명령어
+		{
+			fprintf(fp, "%d 0\n", order[i]);
+		}
 	}
 }

@@ -1,10 +1,10 @@
 #include "define.h"
 #pragma warning (disable:4996)
 keyT keyType = 0; //현재 키 선택.
-char keyNormal[8][2] = { {'q',0} ,{ 'w',0 },{ 'e',0 },{ 'r',0 },{ 'a',0 },{ 's',0 },{ 'd',0 },{ 'f',0 } };
-char keyShort[2][2] = { {'a',0},{'d',0} };
-char keyCommon[6][2] = { { SPACE,0 },{ ESC,0 },{ -32,UP },{ -32,LEFT },{ -32,RIGHT },{ -32,DOWN } };
-char keySpeed[3][2] = { {'1',0} ,{ '2',0 } ,{ '3',0 } };
+int keyNormal[9][2] = { {'q',0} ,{ 'w',0 },{ 'e',0 },{ 'r',0 },{'t', 0},{ 'a',0 },{ 's',0 },{ 'd',0 },{ 'f',0 } };
+int keyShort[2][2] = { {'a',0},{'d',0} };
+int keyCommon[6][2] = { { -32,UP },{ -32,LEFT },{ -32,RIGHT },{ -32,DOWN }, { SPACE,0 },{ ESC,0 } };
+int keySpeed[5][2] = { {'1',0} ,{ '2',0 } ,{ '3',0 },{'4',0},{'5',0} };
 
 void gotoxy(int x, int y)
 {
@@ -32,6 +32,26 @@ void setcursortype(CURSOR_TYPE c)
 }
 void init()//초기화가 필요한 함수들의 초기화.
 {
+	FILE* fp;
+	fp = fopen("config.txt", "rt");
+	if (fp == NULL)
+	{
+		fp = fopen("config.txt", "wt");
+		fprintf(fp, "1\n113 0\n119 0\n101 0\n114 0\n116 0\n97 0 \n115 0\n100 0\n102 0\n97 0\n100 0\n224 72\n224 75\n224 77\n224 80\n32 0\n27 0\n49 0\n50 0\n51 0\n");//초기 상태로 복구.
+		fclose(fp);
+		fp = fopen("config.txt", "rt");
+	}
+	fscanf(fp, "%d\n", &keyType);
+	for (int i = 0; i < 9; i++)
+		fscanf(fp, "%d %d\n", &keyNormal[i][0], &keyNormal[i][1]);
+	for (int i = 0; i < 2; i++)
+		fscanf(fp, "%d %d\n", &keyShort[i][0], &keyShort[i][1]);
+	for (int i = 0; i < 6; i++)
+		fscanf(fp, "%d %d\n", &keyCommon[i][0], &keyCommon[i][1]);
+	for (int i = 0; i < 5; i++)
+		fscanf(fp, "%d %d\n", &keySpeed[i][0], &keySpeed[i][1]);
+	fclose(fp);
+
 	ColorInit();
 	cmdsize(cmdcol, cmdrow);
 	setcursortype(NOCURSOR);
@@ -158,28 +178,114 @@ void initSquare(pos p, char* str)
 }
 void option()
 {
-	FILE* fpR = fopen("config.txt", "rt");
-	FILE* fpW = NULL;
-	if (fpR == NULL)
+	int ch[2];
+	FILE* fp = fopen("config.txt", "rt");
+	if (fp == NULL)
 	{
-		fpW = fopen("config.txt", "wt");
-		fpR = fopen("config.txt", "rt");
-		fprintf(fpW, "0 113\n0 119\n0 101\n0 114\n0 97\n0 115\n0 100\n0 102\n0 97\n0 100\n0 32\n0 27\n-32 72\n-32 75\n-32 77\n-32 80\n0 49\n0 50\n0 51\n");//초기 상태로 복구.
+		fp = fopen("config.txt", "wt");
+		fprintf(fp, "1\n113 0\n119 0\n101 0\n114 0\n116 0\n97 0 \n115 0\n100 0\n102 0\n97 0\n100 0\n224 72\n224 75\n224 77\n224 80\n32 0\n27 0\n49 0\n50 0\n51 0\n");//초기 상태로 복구.
+		fclose(fp);
+		fp = fopen("config.txt", "rt");
 	}
 	else
 	{
-		for (int i = 0; i < 8; i++)
-			fscanf(fpR, "%c %c\n", &keyNormal[i][0], &keyNormal[i][1]);
+		fscanf(fp, "%d\n", &keyType);
+		for (int i = 0; i < 9; i++)
+			fscanf(fp, "%d %d\n", &keyNormal[i][0], &keyNormal[i][1]);
 		for (int i = 0; i < 2; i++)
-			fscanf(fpR, "%c %c\n", &keyShort[i][0], &keyShort[i][1]);
+			fscanf(fp, "%d %d\n", &keyShort[i][0], &keyShort[i][1]);
 		for (int i = 0; i < 6; i++)
-			fscanf(fpR, "%c %c\n", &keyCommon[i][0], &keyCommon[i][1]);
-		for (int i = 0; i < 3; i++)
-			fscanf(fpR, "%c %c\n", &keySpeed[i][0], &keySpeed[i][1]);
+			fscanf(fp, "%d %d\n", &keyCommon[i][0], &keyCommon[i][1]);
+		for (int i = 0; i < 5; i++)
+			fscanf(fp, "%d %d\n", &keySpeed[i][0], &keySpeed[i][1]);
 	}
-	printf("키 설정/ ");
+	system("cls");
+	gotoxy(cmdcol / 2 - 5, cmdrow / 5); printf(">>키 설정<<");
+	gotoxy(cmdcol / 2 - 13, cmdrow / 5 + 2); printf("현재 키 타입:%s",keyType == shortenKey?"적은 키":"확장형 키");
+	gotoxy(cmdcol / 2 - 20, cmdrow / 2); printf("재설정할까요? (SPACE)");
+	ch[0] = _getch();
+	if (ch[0] == SPACE)
+	{
+		if (_kbhit())
+			_getch();
+		gotoxy(cmdcol / 2, cmdrow / 2); printf("\t\t\t\t\t");
+		gotoxy(cmdcol / 2 - 20, cmdrow / 2 + 2); printf("키 타입은 뭐로 할까요? 1: 적은키, 2: 확장형 키");
+		while (1)
+		{
+			ch[0] = _getch();
+			gotoxy(cmdcol / 2 - 20, cmdrow / 2 + 3);
+			if (ch[0] == '1')
+			{
+				keyType = shortenKey;
+				printf("적은 키로 설정했습니다.");
+				Sleep(500);
+				break;
+			}
+			else if (ch[0] == '2')
+			{
+				keyType = normalKey;
+				printf("확장형 키로 설정했습니다.");
+				Sleep(500);
+				break;
+			}
+			else
+			{
+				printf("다시 입력해주세요.");
+				Sleep(500);
+				printf("\t\t\t\t\t");
+			}
+		}
+		gotoxy(cmdcol / 2 - 20, cmdrow / 2 + 2); printf("\t\t\t\t\t\t\t");
+		gotoxy(cmdcol / 2 - 15, cmdrow / 2 + 2); printf("다음 키를 하나씩 눌러주세요. ");
+		gotoxy(cmdcol / 2 - 20, cmdrow / 2 + 3); printf("위방향 키\t\t\t");
+		gotoxy(cmdcol / 2 - 20, cmdrow / 2 + 4); printf(">"); getKey(keyCommon[0]);
+		gotoxy(cmdcol / 2 - 20, cmdrow / 2 + 3); printf("왼쪽 방향 키\t");
+		gotoxy(cmdcol / 2 - 20, cmdrow / 2 + 4); printf(">"); getKey(keyCommon[1]);
+		gotoxy(cmdcol / 2 - 20, cmdrow / 2 + 3); printf("오른쪽 방향 키\t");
+		gotoxy(cmdcol / 2 - 20, cmdrow / 2 + 4); printf(">"); getKey(keyCommon[2]);
+		gotoxy(cmdcol / 2 - 20, cmdrow / 2 + 3); printf("아래 방향 키\t");
+		gotoxy(cmdcol / 2 - 20, cmdrow / 2 + 4); printf(">"); getKey(keyCommon[3]);
+		gotoxy(cmdcol / 2 - 20, cmdrow / 2 + 3); printf("선택 키\t");
+		gotoxy(cmdcol / 2 - 20, cmdrow / 2 + 4); printf(">"); getKey(keyCommon[4]);
+		gotoxy(cmdcol / 2 - 20, cmdrow / 2 + 3); printf("취소 키\t");
+		gotoxy(cmdcol / 2 - 20, cmdrow / 2 + 4); printf(">"); getKey(keyCommon[5]);
+		if (keyType == shortenKey)
+		{
+			gotoxy(cmdcol / 2 - 20, cmdrow / 2 + 3); printf("유닛 왼쪽으로 키\t");
+			gotoxy(cmdcol / 2 - 20, cmdrow / 2 + 4); printf(">"); getKey(keyShort[0]);
+			gotoxy(cmdcol / 2 - 20, cmdrow / 2 + 3); printf("유닛 오른쪽으로 키\t");
+			gotoxy(cmdcol / 2 - 20, cmdrow / 2 + 4); printf(">"); getKey(keyShort[1]);
+		}
+		else //normalKey
+		{
+			for (int i = 0; i < 9; i++)
+			{
+				gotoxy(cmdcol / 2 - 20, cmdrow / 2 + 3); printf("유닛 키 %d\t", i + 1);
+				gotoxy(cmdcol / 2 - 20, cmdrow / 2 + 4); printf(">"); getKey(keyNormal[i]);
+			}
+		}
+		for (int i = 0; i < 5; i++)
+		{
+			gotoxy(cmdcol / 2 - 20, cmdrow / 2 + 3); printf("속도 설정 키 %d\t", i + 1);
+			gotoxy(cmdcol / 2 - 20, cmdrow / 2 + 4); printf(">"); getKey(keySpeed[i]);
+		}
+		fclose(fp);
+		fp = fopen("config.txt", "wt");
+		fprintf(fp, "%d\n", keyType);
+		for (int i = 0; i < 9; i++)
+			fprintf(fp, "%d %d\n", keyNormal[i][0], keyNormal[i][1]);
+		for (int i = 0; i < 2; i++)
+			fprintf(fp, "%d %d\n", keyShort[i][0], keyShort[i][1]);
+		for (int i = 0; i < 6; i++)
+			fprintf(fp, "%d %d\n", keyCommon[i][0], keyCommon[i][1]);
+		for (int i = 0; i < 5; i++)
+			fprintf(fp, "%d %d\n", keySpeed[i][0], keySpeed[i][1]);
+		system("cls");
+		gotoxy(cmdcol / 2 - 20, cmdrow / 2); printf("설정했습니다. 게임에서 확인할 수 있습니다.");
+		fclose(fp);
+	}
+	
 }
-
 void talk(pos start,char* str, int time)
 {
 	setColor(gray);
@@ -187,10 +293,9 @@ void talk(pos start,char* str, int time)
 	gotoxy(start.x + 1, start.y + 1); printf("┴─┴");
 	gotoxy(start.x - 1, start.y + 2); printf("(○_.._◑)");
 	setColor(white);
-	gotoxy(start.x + 10, start.y + 2); printf("{ %s )", str);
+	gotoxy(start.x + 10, start.y + 2); printf("{  %s  )", str);
 	Sleep(time);
 }
-
 void leveladd(char* string)
 {
 	FILE* fptemp = fopen("levels.txt", "at");
@@ -198,4 +303,13 @@ void leveladd(char* string)
 	fseek(fptemp, 0L, SEEK_END);
 	fprintf(fptemp, "%s 0\n", string);
 	fclose(fptemp);
+}
+void getKey(int* ch)
+{
+	ch[0] = _getch();
+	ch[1] = 0;
+	if (_kbhit())
+	{
+		ch[1] = _getch();
+	}
 }

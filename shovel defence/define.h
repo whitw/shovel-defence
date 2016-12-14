@@ -5,6 +5,7 @@
 #include <time.h>
 #include <Windows.h>
 #include <direct.h>
+#include <math.h>
 /**************Define_SizeCMD******************/
 //콘솔창 크기
 #define cmdrow  40
@@ -40,6 +41,17 @@ typedef enum unitT {
 	uWarrior,
 	uTank
 }unitT;
+typedef enum orderT {
+	memo = ';',
+	orderTalk = '\"',
+	mkroad = 'r',
+	gamestart = 's',
+	clear = 'c',
+	fail = 'f',
+	openUnit = 'O',
+	openLevel = 'L',
+	endRead = 'x'
+}orderT;
 typedef enum enemyT {
 	eEmpty,
 	eChicken,
@@ -116,6 +128,7 @@ typedef struct unit
 #define ColorInit() GetStdHandle(STD_OUTPUT_HANDLE)
 #define setColor(x) SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), x)
 #define cmdsize(x, y) {char string[30];sprintf(string,"%s%d%s%d","mode con: cols=",x," lines=",y);system(string);}
+#define abs(x) ((x)> 0?(x):(-x))
 /*****************function_graphic***************/
 void gotoxy(int x, int y);
 void setcursortype(CURSOR_TYPE);
@@ -129,3 +142,4 @@ void levelmaker();//레벨 메이커
 void option();
 int getselect();
 void initSquare(pos p, char* str);
+void getKey(int* ch);

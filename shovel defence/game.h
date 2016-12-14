@@ -17,9 +17,9 @@ void printArrMap();
 void initEnemy(enemy*, enemyT);
 void initUnit(unit*, unitT, pos, int);
 void drawCastle();
-
+void clearCurEnemy(pos pt, int block);
 void eraseEnemyGraphic();
 void attackCastle();
 void moveEnemy();
 void drawEnemy();
-void attackEnemy();
+void attackEnemy(int);

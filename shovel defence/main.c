@@ -1,6 +1,8 @@
 #include "define.h"
 #include "game.h"
 #include "levelmaker.h"
+#pragma warning(disable:4996)
+
 int main()
 {
 	int select = 0;
@@ -39,12 +41,8 @@ void levelmaker()
 	if (num == 1) //맵 파일 정렬
 		sortMapFile();
 	else if (num == 2) //새 파일 만들기
-	{
 		newMapFile();
-	}
 	else if (num == 3) //파일 편집
-	{
 		editMapFile();
-	}
 	//그 이외의 경우에는 숫자에 상관 없이 나가기
 }
