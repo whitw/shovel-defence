@@ -36,7 +36,6 @@ typedef enum unitT {
 	uCannon,
 	uSniper,
 	uIce,
-	uLaser,
 	uFarm,
 	uWarrior,
 	uTank

@@ -23,3 +23,4 @@ void attackCastle();
 void moveEnemy();
 void drawEnemy();
 void attackEnemy(int);
+void upgradeUnit(unit *u);

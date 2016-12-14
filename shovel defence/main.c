@@ -9,7 +9,6 @@ int main()
 	pos start = { 8,4 };
 	//play.intro
 	init();//초기화가 필요한 함수들의 초기화.
-	intro();//인트로 영상을 출력합니다.
 	while (1)
 	{
 		system("cls");
