@@ -1,8 +1,8 @@
 #include "define.h"
 #pragma warning (disable:4996)
-int keyNormal[9][2] = { {'q',0} ,{ 'w',0 },{ 'e',0 },{ 'r',0 },{'t', 0},{ 'a',0 },{ 's',0 },{ 'd',0 },{ 'f',0 } };
-int keyCommon[6][2] = { { -32,UP },{ -32,LEFT },{ -32,RIGHT },{ -32,DOWN }, { SPACE,0 },{ ESC,0 } };
-int keySpeed[5][2] = { {'1',0} ,{ '2',0 } ,{ '3',0 },{'4',0},{'5',0} };
+int keyNormal[8][2];
+int keyCommon[6][2];
+int keySpeed[5][2];
 
 void gotoxy(int x, int y)
 {
@@ -56,7 +56,7 @@ void init()//초기화가 필요한 함수들의 초기화.
 int getselect()
 {
 	int select = 0;
-	char ch;
+	int ch[2];
 	while (1)//get key and select menu
 	{
 		for (int i = 0; i < 5; i++)
@@ -81,23 +81,17 @@ int getselect()
 		printf("■■■");
 		gotoxy(cmdcol / 2 - 12, cmdrow * (select + 5) / 10 + 1);
 		printf("■■");
-		ch = _getch();
-		if (ch == -32 || ch == 0)
+		ch[0] = _getch();
+		ch[1] = 0;
+		if (_kbhit())
+			ch[1] = _getch();
+		if ((ch[0] == keyCommon[0][0] && ch[1] == keyCommon[0][1]) || ch[1] == UP)
+			select = (select + 3) % 4;
+		else if ((ch[0] == keyCommon[3][0] && ch[1] == keyCommon[3][1]) || ch[1] == DOWN)
+			select = (select + 1) % 4;
+		else if (ch[0] == ENTER || ch[0] == SPACE || ch[0] == ESC ||(ch[0] == keyCommon[4][0] && ch[1] == keyCommon[4][1]) || (ch[0] == keyCommon[5][0] && ch[1] == keyCommon[5][1]))
 		{
-			ch = _getch();
-			switch (ch)
-			{
-			case UP:
-				select = (select + 3) % 4;
-				break;
-			case DOWN:
-				select = (select + 1) % 4;
-				break;
-			}
-		}
-		else if (ch == ENTER || ch == SPACE || ch == ESC)
-		{
-			if (ch == ESC)
+			if ((ch[0] == keyCommon[5][0] && ch[1] == keyCommon[5][1]) || ch[0] == ESC)
 				select = 3;
 			for (int i = 0; i < 5; i++)
 			{
@@ -194,7 +188,7 @@ void option()
 	{
 		if (_kbhit())
 			_getch();
-		gotoxy(cmdcol / 2, cmdrow / 2); printf("\t\t\t\t\t");
+		gotoxy(cmdcol / 2 - 20, cmdrow / 2); printf("\t\t\t\t\t");
 		gotoxy(cmdcol / 2 - 15, cmdrow / 2 + 2); printf("다음 키를 하나씩 눌러주세요. ");
 		gotoxy(cmdcol / 2 - 20, cmdrow / 2 + 3); printf("위방향 키\t\t\t");
 		gotoxy(cmdcol / 2 - 20, cmdrow / 2 + 4); printf(">"); getKey(keyCommon[0]);
@@ -232,7 +226,7 @@ void option()
 	}
 	
 }
-void talk(pos start,char* str, int time)
+void talk(pos start,char* str)
 {
 	setColor(gray);
 	gotoxy(start.x + 1, start.y); printf("┌─┐");
@@ -240,7 +234,14 @@ void talk(pos start,char* str, int time)
 	gotoxy(start.x - 1, start.y + 2); printf("(○_.._◑)");
 	setColor(white);
 	gotoxy(start.x + 10, start.y + 2); printf("{  %s  )", str);
-	Sleep(time);
+	_getch();
+	for (int i = 0; i < 3; i++)
+	{
+		gotoxy(start.x - 1, start.y + i); printf("\t\t\t");
+	}
+	gotoxy(start.x + 10, start.y + 2);
+	for (unsigned int i = 0; i < strlen(str)+8;i++)
+		printf(" ");
 }
 void leveladd(char* string)
 {

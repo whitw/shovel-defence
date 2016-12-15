@@ -15,10 +15,6 @@
 #define MAX_LR 30 //왼쪽 오른쪽 길이
 /****************typedef*************************/
 typedef enum { NOCURSOR, SOLIDCURSOR, NORMALCURSOR } CURSOR_TYPE;
-typedef enum keyT {
-	normalKey,
-	shortenKey
-} keyT;
 typedef enum dr {
 	UP = 72,
 	LEFT = 75,
@@ -40,17 +36,17 @@ typedef enum unitT {
 	uWarrior,
 	uTank
 }unitT;
-typedef enum orderT {
-	memo = ';',
-	orderTalk = '\"',
-	mkroad = 'r',
-	gamestart = 's',
-	clear = 'c',
-	fail = 'f',
-	openUnit = 'O',
-	openLevel = 'L',
-	endRead = 'x'
-}orderT;
+//typedef enum orderT {
+//	memo = ';',
+//	orderTalk = '\"',
+//	mkroad = 'r',
+//	gamestart = 's',
+//	clear = 'c',
+//	fail = 'f',
+//	openUnit = 'O',
+//	openLevel = 'L',
+//	endRead = 'x'
+//}orderT;
 typedef enum enemyT {
 	eEmpty,
 	eChicken,

@@ -1,10 +1,15 @@
 #include "define.h"
 #pragma warning(disable:4996)
 
+extern int keyNormal[8][2]; // qwertasdf
+extern int keyCommon[6][2]; // w a s d select escape
+extern int keySpeed[5][2];// speedUp speedDown
+
 int printlevel()//초기 레벨 선택 화면을 출력합니다.
 {
 	FILE* fp;//levels.txt에는 저장되어 있는 맵의 목록이 저장되어 있다.
-	char str[20], ch;//각각 레벨 이름, 받는 키.
+	char str[20],ch;//레벨 이름.
+	int key[2];
 	int num = 0, score = 0;
 	static int select = 0; //0부터 시작, 맵이 10개 이상일 경우 페이지를 넘겨 다음 맵을 볼 수 있게 한다.
 	fp = fopen("levels.txt", "rt");
@@ -88,54 +93,28 @@ int printlevel()//초기 레벨 선택 화면을 출력합니다.
 		//아래에 현 위치/최대 위치 표시
 		setColor(gray);
 		gotoxy((cmdcol / 2 - 5), cmdrow * 4 / 5 + 3); printf("◀%02d/%02d▶", select / 10 + 1, (num - 1) / 10 + 1);
-		ch = _getch();
+		key[0] = _getch();
+		key[1] = 0;
 		if (_kbhit())
-		{
-			ch = _getch();
-			switch (ch)
-			{
-			case UP:
-				select = (select + num - 5) % num;
-				break;
-			case LEFT:
-				select = (select + num - 1) % num;
-				break;
-			case DOWN:
-				if (select + 5 >= num)
-					select %= 5;
-				else select += 5;
-				break;
-			case RIGHT:
-				select = (select + 1) % num;
-				break;
-			}
-		}
-		else switch (ch)
-		{
-		case ENTER:
-			fclose(fp);
-			return select;
-		case ESC:
-			fclose(fp);
-			return -1;
-		case 'w':
-		case 'W':
+			key[1] = _getch();
+		if (key[0] == keyCommon[0][0] && key[1] == keyCommon[0][1])
 			select = (select + num - 5) % num;
-			break;
-		case 'a':
-		case 'A':
+		if (key[0] == keyCommon[1][0] && key[1] == keyCommon[1][1])
 			select = (select + num - 1) % num;
-			break;
-		case 's':
-		case 'S':
+		if (key[0] == keyCommon[2][0] && key[1] == keyCommon[2][1])
+			select = (select + 1) % num;
+		if (key[0] == keyCommon[3][0] && key[1] == keyCommon[3][1]){
 			if (select + 5 >= num)
 				select %= 5;
 			else select += 5;
-			break;
-		case 'd':
-		case 'D':
-			select = (select + 1) % num;
-			break;
+		}
+		if (key[0] == keyCommon[4][0] && key[1] == keyCommon[4][1]){
+			fclose(fp);
+			return select;
+		}
+		if(key[0] == keyCommon[5][0] && key[1] == keyCommon[5][1]){
+			fclose(fp);
+			return -1;
 		}
 	}
 }
